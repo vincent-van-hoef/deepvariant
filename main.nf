@@ -1,4 +1,4 @@
-    #!/usr/bin/env nextflow
+#!/usr/bin/env nextflow
   /*
   ========================================================================================
                            nf-core/deepvariant
@@ -14,30 +14,48 @@ import java.util.List;
 def helpMessage() {
     log.info"""
     =========================================
-     nf-core/deepvariant v${manifest.pipelineVersion}
+     nf-core/deepvariant v${params.pipelineVersion}
     =========================================
     Usage:
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/deepvariant --reads '*_R{1,2}.fastq.gz' -profile standard,docker
+    nextflow run main.nf --hg19 --bam_folder "s3://deepvariant-data/test-bam/" -profile standard,docker
 
     Mandatory arguments:
-      --reads                       Path to input data (must be surrounded with quotes)
-      --genome                      Name of iGenomes reference
+      --bam_folder                  Path to folder containing BAM files (reads must be aligned to specified reference file, see below)
       -profile                      Configuration profile to use. Can use multiple (comma separated)
                                     Available: standard, conda, docker, singularity, awsbatch, test
 
-    Options:
-      --singleEnd                   Specifies that the input is single end reads
+    References:                     If you wish to overwrite deafult reference of hg19.
+      --hg19                        Default for if reads were aligned against hg19 reference genome to produce input bam file(s)
+      --h38                         Use if reads were aligned against GRCh38 reference genome to produce input bam file(s)
+      --grch37primary               Use if reads were aligned against GRCh37 primary reference genome to produce input bam file(s)
+      --hs37d5                      Use if reads were aligned against hs37d5 reference genome to produce input bam file(s)
+      OR
+      --fasta                       Path to fasta reference
+      --fai                         Path to fasta index generated using `samtools faidx`
+      --fastagz                     Path to gzipped fasta
+      --gzfai                       Path to index of gzipped fasta
+      --gzi                         Path to bgzip index format (.gzi) produced by faidx
+      *Pass all five files above to skip preprocessing step
 
-    References                      If not specified in the configuration file or you wish to overwrite any of the references.
-      --fasta                       Path to Fasta reference
+      Options:
+      --exome                       For exome bam files
+      --bed                         Path to bedfile
+      --params.j                    Number of cores used by machine for makeExamples (default = 2)
+      --modelFolder                 Folder containing own DeepVariant trained data model
+      --MODEL_NAME                  Name of own DeepVariant trained data model
+
+      Testing:
+      --test                        For testing purposes
+      --hg19chr20                   To peform DeepVariant on chr20 only for testing purposes
 
     Other options:
-      --outdir                      The output directory where the results will be saved
+      --outdir                      The output directory where the results will be saved (default = RESULTS-DeepVariant)
       --email                       Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
       -name                         Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
+      --help                        Bring up this help message
 
     AWSBatch options:
       --awsqueue                    The AWSBatch JobQueue that needs to be set when running on AWSBatch
@@ -200,7 +218,7 @@ if( !("false").equals(params.getBai)){
 /*--------------------------------------------------
   Output directory
 ---------------------------------------------------*/
-params.resultdir = "RESULTS-DeepVariant";
+params.outdir = "./RESULTS-DeepVariant";
 
 /*--------------------------------------------------
   Params for the Read Group Line to be added just in
@@ -214,7 +232,7 @@ params.rgpu="unit1";
 params.rgsm=20;
 
 
-
+/*
 // Header log info
 log.info """=======================================================
                                           ,--./,-.
@@ -253,6 +271,7 @@ if(workflow.profile == 'awsbatch'){
 if(params.email) summary['E-mail Address'] = params.email
 log.info summary.collect { k,v -> "${k.padRight(15)}: $v" }.join("\n")
 log.info "========================================="
+*/
 
 /*
 def create_workflow_summary(summary) {
@@ -456,7 +475,7 @@ process postprocess_variants{
   tag "$bam"
   cpus params.j
 
-  publishDir params.resultdir, mode: 'copy'
+  publishDir params.outdir, mode: 'copy'
   input:
   set file(fasta),file("${fasta}.fai"),file("${fasta}.gz"),file("${fasta}.gz.fai"), file("${fasta}.gz.gzi"), val(bam),file('call_variants_output.tfrecord') from called_variants
   output:
@@ -472,7 +491,7 @@ process postprocess_variants{
 
 
 workflow.onComplete {
-    println ( workflow.success ? "Done! \nYou can find your results in $baseDir/${params.resultdir}" : "Oops .. something went wrong" )
+    println ( workflow.success ? "Done! \nYou can find your results in $baseDir/${params.outdir}" : "Oops .. something went wrong" )
 
 /*
  * Completion e-mail notification
