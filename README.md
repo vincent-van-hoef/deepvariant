@@ -1,3 +1,5 @@
+# ![deepvariant](https://raw.githubusercontent.com/nf-core/deepvariant/master/docs/images/deepvariant_logo.png.png)
+
 # [UNDER DEVELOPMENT] DeepVariant as a Nextflow pipeline
 
 **This pipeline is under development and does not yet meet the requirements of a nf-core pipeline**
