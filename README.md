@@ -1,4 +1,4 @@
-# ![deepvariant](https://raw.githubusercontent.com/nf-core/deepvariant/master/docs/images/deepvariant_logo.png.png)
+# ![deepvariant](https://raw.githubusercontent.com/nf-core/deepvariant/master/docs/images/deepvariant_logo.png)
 
 # [UNDER DEVELOPMENT] DeepVariant as a Nextflow pipeline
 
