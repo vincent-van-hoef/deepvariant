@@ -45,7 +45,7 @@ def helpMessage() {
       --bed                         Path to bedfile
       --j                           Number of cores used by machine for makeExamples (default = 2)
       --modelFolder                 Folder containing own DeepVariant trained data model
-      --MODEL_NAME                  Name of own DeepVariant trained data model
+      --modelName                   Name of own DeepVariant trained data model
       --rgid                        Bam file read group line id incase its needed (default = 4)
       --rglb                        Bam file read group line library incase its needed (default = 'lib1')
       --rgpl                        Bam file read group line platform incase its needed (default = 'illumina')
@@ -236,6 +236,11 @@ params.rgpl="illumina";
 params.rgpu="unit1";
 params.rgsm=20;
 
+/*--------------------------------------------------
+  For workflow summary
+---------------------------------------------------*/
+params.email = false;
+
 
 // Header log info
 log.info """=======================================================
@@ -270,7 +275,7 @@ summary['Max CPUs']         = params.max_cpus
 summary['Max Time']         = params.max_time
 summary['Number of cores for makeExamples'] = params.j
 summary['DeepVariant trained data model folder'] = params.modelFolder
-if(params.MODEL_NAME) summary['DeepVariant trained data model name'] = params.MODEL_NAME
+summary['DeepVariant trained data model name'] = params.modelName
 summary['Output dir']       = params.outdir
 summary['Working dir']      = workflow.workDir
 summary['Container Engine'] = workflow.containerEngine
