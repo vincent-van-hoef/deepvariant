@@ -24,8 +24,6 @@ def helpMessage() {
 
     Mandatory arguments:
       --bam_folder                  Path to folder containing BAM files (reads must be aligned to specified reference file, see below)
-      -profile                      Configuration profile to use. Can use multiple (comma separated)
-                                    Available: standard, conda, docker, singularity, awsbatch, test
 
     References:                     If you wish to overwrite deafult reference of hg19.
       --hg19                        Default for if reads were aligned against hg19 reference genome to produce input bam file(s)
@@ -41,11 +39,18 @@ def helpMessage() {
       *Pass all five files above to skip preprocessing step
 
       Options:
+      -profile                      Configuration profile to use. Can use multiple (comma separated)
+                                    Available: standard, conda, docker, singularity, awsbatch, test
       --exome                       For exome bam files
       --bed                         Path to bedfile
-      --params.j                    Number of cores used by machine for makeExamples (default = 2)
+      --j                           Number of cores used by machine for makeExamples (default = 2)
       --modelFolder                 Folder containing own DeepVariant trained data model
       --MODEL_NAME                  Name of own DeepVariant trained data model
+      --rgid                        Bam file read group line id incase its needed (default = 4)
+      --rglb                        Bam file read group line library incase its needed (default = 'lib1')
+      --rgpl                        Bam file read group line platform incase its needed (default = 'illumina')
+      --rgpu                        Bam file read group line platform unit incase its needed (default = 'unit1')
+      --rgsm                        Bam file read group line sample incase its needed (default = 20)
 
       Testing:
       --test                        For testing purposes
@@ -232,7 +237,6 @@ params.rgpu="unit1";
 params.rgsm=20;
 
 
-/*
 // Header log info
 log.info """=======================================================
                                           ,--./,-.
@@ -241,29 +245,43 @@ log.info """=======================================================
     | \\| |       \\__, \\__/ |  \\ |___     \\`-._,-`-,
                                           `._,._,\'
 
-nf-core/deepvariant v${manifest.pipelineVersion}"
+nf-core/deepvariant v${params.pipelineVersion}"
 ======================================================="""
 def summary = [:]
-summary['Pipeline Name']  = 'nf-core/deepvariant'
-summary['Pipeline Version'] = manifest.pipelineVersion
-summary['Run Name']     = custom_runName ?: workflow.runName
-summary['Reads']        = params.reads
-summary['Fasta Ref']    = params.fasta
-summary['Data Type']    = params.singleEnd ? 'Single-End' : 'Paired-End'
-summary['Max Memory']   = params.max_memory
-summary['Max CPUs']     = params.max_cpus
-summary['Max Time']     = params.max_time
-summary['Output dir']   = params.outdir
-summary['Working dir']  = workflow.workDir
+summary['Pipeline Name']    = 'nf-core/deepvariant'
+summary['Pipeline Version'] = params.pipelineVersion
+summary['Bam folder']       = params.bam_folder
+if(params.hg19) summary['Reference genome']           = "hg19"
+if(params.h38) summary['Reference genome']            = "h38"
+if(params.grch37primary) summary['Reference genome']  = "grch37primary"
+if(params.hs37d5) summary['Reference genome']         = "hs37d5"
+if(params.fasta != 'nofasta') summary['Fasta Ref']            = params.fasta
+if(params.fai != 'nofai') summary['Fasta Index']              = params.fai
+if(params.fastagz != 'nofastagz') summary['Fasta gzipped ']   = params.fastagz
+if(params.gzfai != 'nogzfai') summary['Fasta gzipped Index']  = params.gzfai
+if(params.gzi != 'nogzi') summary['Fasta bgzip Index']        = params.gzi
+if(params.rgid != 4) summary['BAM Read Group ID']            = params.rgid
+if(params.rglb != 'lib1') summary['BAM Read Group Library']         = params.rglb
+if(params.rgpl != 'illumina') summary['BAM Read Group Platform']    = params.rgpl
+if(params.rgpu != 'unit1') summary['BAM Read Group Platform Unit']  = params.rgpu
+if(params.rgsm != 20) summary['BAM Read Group Sample']              = params.rgsm
+summary['Max Memory']       = params.max_memory
+summary['Max CPUs']         = params.max_cpus
+summary['Max Time']         = params.max_time
+summary['Number of cores for makeExamples'] = params.j
+summary['DeepVariant trained data model folder'] = params.modelFolder
+if(params.MODEL_NAME) summary['DeepVariant trained data model name'] = params.MODEL_NAME
+summary['Output dir']       = params.outdir
+summary['Working dir']      = workflow.workDir
 summary['Container Engine'] = workflow.containerEngine
 if(workflow.containerEngine) summary['Container'] = workflow.container
-summary['Current home']   = "$HOME"
-summary['Current user']   = "$USER"
-summary['Current path']   = "$PWD"
-summary['Working dir']    = workflow.workDir
-summary['Output dir']     = params.outdir
-summary['Script dir']     = workflow.projectDir
-summary['Config Profile'] = workflow.profile
+summary['Current home']     = "$HOME"
+summary['Current user']     = "$USER"
+summary['Current path']     = "$PWD"
+summary['Working dir']      = workflow.workDir
+summary['Output dir']       = params.outdir
+summary['Script dir']       = workflow.projectDir
+summary['Config Profile']   = workflow.profile
 if(workflow.profile == 'awsbatch'){
    summary['AWS Region'] = params.awsregion
    summary['AWS Queue'] = params.awsqueue
@@ -271,7 +289,6 @@ if(workflow.profile == 'awsbatch'){
 if(params.email) summary['E-mail Address'] = params.email
 log.info summary.collect { k,v -> "${k.padRight(15)}: $v" }.join("\n")
 log.info "========================================="
-*/
 
 /*
 def create_workflow_summary(summary) {
