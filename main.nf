@@ -328,7 +328,6 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 
 process preprocessFASTA{
 
-  container 'lifebitai/preprocessingvctools'
   publishDir "$baseDir/sampleDerivatives"
 
 
@@ -363,7 +362,6 @@ process preprocessBAM{
 
 
   tag "${bam[0]}"
-  container 'lifebitai/samtools'
   publishDir "$baseDir/sampleDerivatives"
 
   input:
@@ -422,7 +420,7 @@ if(params.bed){
       mkdir shardedExamples
       time seq 0 !{numberShardsMinusOne} | \
       parallel --eta --halt 2 \
-        python /opt/deepvariant/bin/make_examples.zip \
+        python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/make_examples.zip \
         --mode calling \
         --ref !{fasta[1]}.gz\
         --reads !{bam[1]} \
@@ -447,7 +445,7 @@ else{
       mkdir shardedExamples
       time seq 0 !{numberShardsMinusOne} | \
       parallel --eta --halt 2 \
-        python /opt/deepvariant/bin/make_examples.zip \
+        python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/make_examples.zip \
         --mode calling \
         --ref !{fasta[1]}.gz\
         --reads !{bam[1]} \
@@ -476,7 +474,7 @@ process call_variants{
   set file(fasta),file("${fasta}.fai"),file("${fasta}.gz"),file("${fasta}.gz.fai"), file("${fasta}.gz.gzi"), val(bam), file('call_variants_output.tfrecord') into called_variants
   script:
   """
-  /opt/deepvariant/bin/call_variants \
+  python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/call_variants.zip \
     --outfile call_variants_output.tfrecord \
     --examples shardedExamples/examples.tfrecord@${params.j}.gz \
     --checkpoint dv2/models/${params.modelName} \
@@ -504,7 +502,7 @@ process postprocess_variants{
    set val(bam),file("${bam}.vcf") into postout
   script:
   """
-    /opt/deepvariant/bin/postprocess_variants \
+    python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/postprocess_variants.zip \
     --ref "${fasta}.gz" \
     --infile call_variants_output.tfrecord \
     --outfile "${bam}.vcf"
