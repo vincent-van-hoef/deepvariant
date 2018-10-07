@@ -15,7 +15,7 @@ before_install:
   # Pull the docker image first so the test doesn't wait for this
   - docker pull philpalmer/deepvariant
   # Fake the tag locally so that the pipeline runs properly
-  - docker tag philpalmer/deepvariant:latest
+  - docker tag philpalmer/deepvariant philpalmer/deepvariant:latest
 
 install:
   # Install Nextflow
