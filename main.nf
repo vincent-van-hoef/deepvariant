@@ -27,6 +27,7 @@ def helpMessage() {
 
     References:                     If you wish to overwrite deafult reference of hg19.
       --hg19                        Default for if reads were aligned against hg19 reference genome to produce input bam file(s)
+      --hg19chr20                   To peform DeepVariant on chr20 only for testing purposes
       --h38                         Use if reads were aligned against GRCh38 reference genome to produce input bam file(s)
       --grch37primary               Use if reads were aligned against GRCh37 primary reference genome to produce input bam file(s)
       --hs37d5                      Use if reads were aligned against hs37d5 reference genome to produce input bam file(s)
@@ -51,10 +52,6 @@ def helpMessage() {
       --rgpl                        Bam file read group line platform incase its needed (default = 'illumina')
       --rgpu                        Bam file read group line platform unit incase its needed (default = 'unit1')
       --rgsm                        Bam file read group line sample incase its needed (default = 20)
-
-      Testing:
-      --test                        For testing purposes
-      --hg19chr20                   To peform DeepVariant on chr20 only for testing purposes
 
     Other options:
       --outdir                      The output directory where the results will be saved (default = RESULTS-DeepVariant)
@@ -154,13 +151,6 @@ else if(params.h38 ){
   fastagz=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz");
   gzfai=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz.fai");
   gzi=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz.gzi");
-}
-else if(params.test){
-  fasta=file("$baseDir/testdata/ucsc.hg19.chr20.unittest.fasta");
-  fai=file("$baseDir/testdata/ucsc.hg19.chr20.unittest.fasta.fai");
-  fastagz=file("$baseDir/testdata/ucsc.hg19.chr20.unittest.fasta.gz");
-  gzfai=file("$baseDir/testdata/ucsc.hg19.chr20.unittest.fasta.gz.fai");
-  gzi=file("$baseDir/testdata/ucsc.hg19.chr20.unittest.fasta.gz.gzi");
 }
 else if(params.hs37d5){
   fasta=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa");
