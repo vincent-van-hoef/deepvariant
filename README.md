@@ -5,17 +5,13 @@
 **This pipeline is under development and does not yet meet the requirements of a nf-core pipeline**
 
 [![Build Status](https://travis-ci.org/nf-core/deepvariant.svg?branch=master)](https://travis-ci.org/nf-core/deepvariant)
-[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A50.30.0-brightgreen.svg)](https://www.nextflow.io/)
+[![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A50.32.0-brightgreen.svg)](https://www.nextflow.io/)
 
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg)](http://bioconda.github.io/)
 [![Docker](https://img.shields.io/docker/automated/nfcore/deepvariant.svg)](https://hub.docker.com/r/nfcore/deepvariant)
 ![Singularity Container available](https://img.shields.io/badge/singularity-available-7E4C74.svg)
 
 A Nextflow pipeline for running the [Google DeepVariant variant caller](https://github.com/google/deepvariant).
-
-At [Lifebit](https://lifebit.ai/?utm_campaign=documentation&utm_source=github&utm_medium=web) we developed this pipeline to ease and reduce cost for variant calling analyses. You can test the pipeline through our Platform: [Deploit](https://deploit.lifebit.ai/app/home). This allows you to run Deepvariant over cloud in a matter of a couple of clicks: and for single users our service is completely free!
-
-Read more about DeepVariant in Nextflow in our [Blog post](https://blog.lifebit.ai/post/deepvariant/?utm_campaign=documentation&utm_source=github&utm_medium=web)
 
 ## What is DeepVariant and why in Nextflow?
 
@@ -32,6 +28,40 @@ For more detailed information about DeepVariant please refer to:
 https://github.com/google/deepvariant
 https://research.googleblog.com/2017/12/deepvariant-highly-accurate-genomes.html
 
+## Quick Start
+
+A typical run on **whole genome data** looks like this:
+
+```
+git clone https://github.com/lifebit-ai/DeepVariant
+cd DeepVariant
+nextflow run main.nf --hg19 --bam_folder "s3://deepvariant-data/test-bam/"
+```
+
+In this case variants are called on the two bam files contained in the lifebit-test-data/bam s3 bucket. The hg19 version of the reference genome is used.
+Two vcf files are produced and can be found in the folder "RESULTS-DeepVariant"
+
+A typical run on **whole exome data** looks like this:
+
+```
+git clone https://github.com/lifebit-ai/DeepVariant
+cd DeepVariant
+nextflow run main.nf --exome --hg19 --bam_folder myBamFolder --bed myBedFile"
+```
+
+## Documentation
+
+The nf-core/deepvariant documentation is split into the following files:
+
+1. [Installation](docs/installation.md)
+2. [Running the pipeline](docs/usage.md)
+3. Pipeline configuration
+   - [Adding your own system](docs/configuration/adding_your_own.md)
+   - [Reference genomes](docs/configuration/reference_genomes.md)
+4. [Output and how to interpret the results](docs/output.md)
+5. [Troubleshooting](docs/troubleshooting.md)
+
+<!--
 ## Dependencies
 
 [Nextflow](https://www.nextflow.io/)
@@ -203,3 +233,10 @@ model.ckpt.data-00000-of-00001
 model.ckpt.index
 model.ckpt.meta
 ```
+-->
+
+## Credits
+
+This pipeline was originally developed by [Lifebit](https://lifebit.ai/?utm_campaign=documentation&utm_source=github&utm_medium=web) to ease and reduce cost for variant calling analyses. You can test the pipeline through Lifebit's Platform: [Deploit](https://deploit.lifebit.ai/app/home). This allows you to run Deepvariant over cloud in a matter of a couple of clicks: and for single users our service is completely free! Read more about DeepVariant in Nextflow in this [Blog post](https://blog.lifebit.ai/post/deepvariant/?utm_campaign=documentation&utm_source=github&utm_medium=web)
+
+Many thanks to nf-core and those who have helped out along the way too, including (but not limited to): @ewels, @apeltzer & @MaxUlysse
