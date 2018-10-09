@@ -1,27 +1,53 @@
 # nf-core/deepvariant: Troubleshooting
 
+## About preprocessing
+
+DeepVariant, in order to run at its fastest, requires some indexed and compressed versions of both the reference genome and the BAM files. With DeepVariant in Nextflow, if you wish, you can only use as an input the fasta and the BAM file and let us do the work for you in a clean and standarized way (standard tools like [samtools](http://samtools.sourceforge.net/) are used for indexing and every step is run inside of a Docker container).
+
+This is how the list of the needed input files looks like. If these are passed all as input parameters, the preprocessing steps will be skipped.
+
+```
+NA12878_S1.chr20.10_10p1mb.bam   NA12878_S1.chr20.10_10p1mb.bam.bai
+ucsc.hg19.chr20.unittest.fasta   ucsc.hg19.chr20.unittest.fasta.fai
+ucsc.hg19.chr20.unittest.fasta.gz  ucsc.hg19.chr20.unittest.fasta.gz.fai   ucsc.hg19.chr20.unittest.fasta.gz.gzi
+```
+
+If you do not have all of them, these are the file you can give as input to the Nextflow pipeline, and the rest will be automatically produced for you .
+
+```
+NA12878_S1.chr20.10_10p1b.bam
+ucsc.hg19.chr20.unittest.fasta
+```
+
 ## Input files not found
 
-If only no file, only one input file , or only read one and not read two is picked up then something is wrong with your input file declaration
+Use this to specify the location of your input folder containing BAM files
 
-1. The path must be enclosed in quotes (`'` or `"`)
-2. The path must have at least one `*` wildcard character. This is even if you are only running one paired end sample.
-3. When using the pipeline with paired end data, the path must use `{1,2}` or `{R1,R2}` notation to specify read pairs.
-4.  If you are running Single end data make sure to specify `--singleEnd`
-
-If the pipeline can't find your files then you will get the following error
+- `--bam_folder`
 
 ```
-ERROR ~ Cannot find any reads matching: *{1,2}.fastq.gz
+--bam_folder "/path/to/folder/where/bam/files/are"            REQUIRED
+--getBai "true"                                               OPTIONAL  (default: "false")
 ```
 
-Note that if your sample name is "messy" then you have to be very particular with your glob specification. A file name like `L1-1-D-2h_S1_L002_R1_001.fastq.gz` can be difficult enough for a human to read. Specifying `*{1,2}*.gz` wont work give you what you want Whilst `*{R1,R2}*.gz` will.
+- In case only some specific files inside the BAM folder should be used as input, a file prefix can be defined by:
+  - `--bam_file_prefix`
 
+```
+--bam_file_prefix MYPREFIX
+```
+
+All the BAM files on which the variant calling should be performed should be all stored in the same folder. If you already have the index files (BAI) they should be stored in the same folder and called with the same prefix as the correspoding BAM file ( e.g. file.bam and file.bam.bai ).
+
+**! TIP**
+All the input files can be used in s3 buckets too and the s3://path/to/files/in/bucket can be used instead of a local path.
 
 ## Data organization
+
 The pipeline can't take a list of multiple input files - it takes a glob expression. If your input files are scattered in different paths then we recommend that you generate a directory with symlinked files. If running in paired end mode please make sure that your files are sensibly named so that they can be properly paired. See the previous point.
 
 ## Extra resources and getting help
+
 If you still have an issue with running the pipeline then feel free to contact us.
 Have a look at the [pipeline website](https://github.com/nf-core/deepvariant) to find out how.
 
