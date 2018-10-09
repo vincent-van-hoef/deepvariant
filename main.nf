@@ -13,11 +13,7 @@
 def helpMessage() {
     log.info"""
     =========================================
-<<<<<<< HEAD
-     nf-core/deepvariant v${params.pipelineVersion}
-=======
-     nf-core/deepvariant v${workflow.manifest.version}
->>>>>>> TEMPLATE
+    nf-core/deepvariant v${params.pipelineVersion}
     =========================================
     Usage:
 
@@ -57,7 +53,7 @@ def helpMessage() {
       --rgsm                        Bam file read group line sample incase its needed (default = 20)
 
     Other options:
-      --outdir                      The output directory where the results will be saved (default = RESULTS-DeepVariant)
+      --outdir                      The output directory where the results will be saved (default = results)
       --email                       Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
       -name                         Name for the pipeline run. If not specified, Nextflow will automatically generate a random mnemonic.
       --help                        Bring up this help message
@@ -214,9 +210,10 @@ if( !("false").equals(params.getBai)){
 }
 
 /*--------------------------------------------------
-  Output directory
+  Output directory & email
 ---------------------------------------------------*/
-params.outdir = "./RESULTS-DeepVariant";
+params.outdir = "./results";
+params.email = false
 
 /*--------------------------------------------------
   Params for the Read Group Line to be added just in

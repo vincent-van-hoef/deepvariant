@@ -1,23 +1,13 @@
 sudo: required
-<<<<<<< HEAD
-language: java
-jdk: openjdk8
-services:
-  - docker
-python:
-  - "2.7"
-=======
 language: python
 jdk: openjdk8
 services: docker
 python: '3.6'
->>>>>>> TEMPLATE
 cache: pip
 matrix:
   fast_finish: true
 
 before_install:
-<<<<<<< HEAD
   # PRs made to 'master' branch should always orginate from another repo or the 'dev' branch
   - '[ $TRAVIS_PULL_REQUEST = "false" ] || [ $TRAVIS_BRANCH != "master" ] || ([ $TRAVIS_PULL_REQUEST_SLUG = $TRAVIS_REPO_SLUG ] && [ $TRAVIS_PULL_REQUEST_BRANCH = "dev" ])'
   # Pull the docker image first so the test doesn't wait for this
@@ -42,13 +32,12 @@ install:
 env:
   - NXF_VER='0.32.0' # Specify a minimum NF version that should be tested and work
   - NXF_VER='' # Plus: get the latest NF version and check, that it works
-=======
   # PRs to master are only ok if coming from dev branch
   - '[ $TRAVIS_PULL_REQUEST = "false" ] || [ $TRAVIS_BRANCH != "master" ] || ([ $TRAVIS_PULL_REQUEST_SLUG = $TRAVIS_REPO_SLUG ] && [ $TRAVIS_PULL_REQUEST_BRANCH = "dev" ])'
   # Pull the docker image first so the test doesn't wait for this
-  - docker pull nfcore/deepvariant
+  - docker pull nfcore/deepvariant:dev
   # Fake the tag locally so that the pipeline runs properly
-  - docker tag nfcore/deepvariant nfcore/deepvariant:latest
+  #- docker tag nfcore/deepvariant nfcore/deepvariant:latest
 
 install:
   # Install Nextflow
@@ -63,7 +52,6 @@ install:
 env:
   - NXF_VER='0.32.0' # Specify a minimum NF version that should be tested and work
   - NXF_VER='' # Plus: get the latest NF version and check that it works
->>>>>>> TEMPLATE
 
 script:
   # Lint the pipeline code
