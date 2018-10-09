@@ -4,5 +4,8 @@ data/
 results/
 .DS_Store
 tests/test_data
+<<<<<<< HEAD
 sampleDerivatives/
 RESULTS-DeepVariant/
+=======
+>>>>>>> TEMPLATE

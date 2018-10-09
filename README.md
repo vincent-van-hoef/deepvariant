@@ -1,14 +1,20 @@
+<<<<<<< HEAD
 # ![deepvariant](https://raw.githubusercontent.com/nf-core/deepvariant/master/docs/images/deepvariant_logo.png)
 
 # [UNDER DEVELOPMENT] DeepVariant as a Nextflow pipeline
 
 **This pipeline is under development and does not yet meet the requirements of a nf-core pipeline**
+=======
+# nf-core/deepvariant
+**UNDER DEVELOPMENT: Deep Variant as a Nextflow pipeline**
+>>>>>>> TEMPLATE
 
 [![Build Status](https://travis-ci.org/nf-core/deepvariant.svg?branch=master)](https://travis-ci.org/nf-core/deepvariant)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A50.32.0-brightgreen.svg)](https://www.nextflow.io/)
 
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg)](http://bioconda.github.io/)
 [![Docker](https://img.shields.io/docker/automated/nfcore/deepvariant.svg)](https://hub.docker.com/r/nfcore/deepvariant)
+<<<<<<< HEAD
 ![Singularity Container available](https://img.shields.io/badge/singularity-available-7E4C74.svg)
 
 A Nextflow pipeline for running the [Google DeepVariant variant caller](https://github.com/google/deepvariant).
@@ -80,3 +86,22 @@ The worklow **accepts one reference genome and multiple BAM files as input**. Th
 This pipeline was originally developed by [Lifebit](https://lifebit.ai/?utm_campaign=documentation&utm_source=github&utm_medium=web) to ease and reduce cost for variant calling analyses. You can test the pipeline through Lifebit's Platform: [Deploit](https://deploit.lifebit.ai/app/home). This allows you to run Deepvariant over cloud in a matter of a couple of clicks: and for single users our service is completely free! Read more about DeepVariant in Nextflow in this [Blog post](https://blog.lifebit.ai/post/deepvariant/?utm_campaign=documentation&utm_source=github&utm_medium=web)
 
 Many thanks to nf-core and those who have helped out along the way too, including (but not limited to): @ewels, @apeltzer & @MaxUlysse
+=======
+![Singularity Container available](
+https://img.shields.io/badge/singularity-available-7E4C74.svg)
+
+### Introduction
+The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It comes with docker / singularity containers making installation trivial and results highly reproducible.
+
+
+### Documentation
+The nf-core/deepvariant pipeline comes with documentation about the pipeline, found in the `docs/` directory:
+
+1. [Installation](docs/installation.md)
+2. Pipeline configuration
+    * [Local installation](docs/configuration/local.md)
+    * [Adding your own system](docs/configuration/adding_your_own.md)
+3. [Running the pipeline](docs/usage.md)
+4. [Output and how to interpret the results](docs/output.md)
+5. [Troubleshooting](docs/troubleshooting.md)
+>>>>>>> TEMPLATE

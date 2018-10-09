@@ -2,7 +2,11 @@ From:nfcore/base
 Bootstrap:docker
 
 %labels
+<<<<<<< HEAD
     DESCRIPTION Singularity image containing all requirements for nf-core/deepvariant pipeline
+=======
+    DESCRIPTION Singularity image containing all requirements for the nf-core/deepvariant pipeline
+>>>>>>> TEMPLATE
     VERSION 1.0dev
 
 %environment
