@@ -19,7 +19,7 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run main.nf --hg19 --bam_folder "s3://deepvariant-data/test-bam/" -profile standard,docker
+    nextflow run nf-core/deepvariant --hg19 --bam_folder "s3://deepvariant-data/test-bam/" -profile standard,docker
 
     Mandatory arguments:
       --bam_folder                  Path to folder containing BAM files (reads must be aligned to specified reference file, see below)
@@ -74,27 +74,18 @@ if (params.help){
     exit 0
 }
 
-/*--------------------------------------------------
-  Model folder
-  Content: trained model.
-  For exact information refer to documentation.
-  Can be substitued with own model folder.
----------------------------------------------------*/
-params.modelFolder="s3://deepvariant-data/models"
-params.modelName="model.ckpt";
-params.exome="";
+
 if(params.exome){
-  model=file("s3://deepvariant-data/models/exome");
+  model=file("s3://deepvariant-data/models/exome")
 }
 else{
-  model=file("${params.modelFolder}");
+  model=file(params.modelFolder)
 }
 
 
 /*--------------------------------------------------
   Using the BED file
 ---------------------------------------------------*/
-params.bed=""
 if(params.exome){
   assert (params.bed != true) && (params.bed != null) : "please specify --bed option (--bed bedfile)"
   bedfile=file("${params.bed}")
@@ -104,85 +95,57 @@ if(params.exome){
   Cores of the machine --> used for process makeExamples
   default:2
 ---------------------------------------------------*/
-int cores = Runtime.getRuntime().availableProcessors();
+int cores = Runtime.getRuntime().availableProcessors()
 params.j=cores
-numberShardsMinusOne=params.j-1;
+numberShardsMinusOne=params.j-1
 
-/*--------------------------------------------------
-  Fasta related input files
-
-  You can use the flag --hg19 for using the hg19 version of the Genome.
-  You can use the flag --h38 for using the GRCh38.p10 version of the Genome.
-
-  They can be passed manually, through the parameter:
-  	params.fasta="/my/path/to/file";
-  And if already at user's disposal:
-	params.fai="/my/path/to/file";
-	params.fastagz="/my/path/to/file";
-	params.gzfai="/my/path/to/file";
-	params.gzi="/my/path/to/file";
-
----------------------------------------------------*/
-
-params.hg19="true";
-params.h38="";
-params.test="";
-params.hg19chr20="";
-params.grch37primary="";
-params.hs37d5="";
-
-params.fasta="nofasta";
-params.fai="nofai";
-params.fastagz="nofastagz";
-params.gzfai="nogzfai";
-params.gzi="nogzi";
 
 if(!("nofasta").equals(params.fasta)){
   fasta=file(params.fasta)
-  fai=file(params.fai);
-  fastagz=file(params.fastagz);
-  gzfai=file(params.gzfai);
-  gzi=file(params.gzi);
+  fai=file(params.fai)
+  fastagz=file(params.fastagz)
+  gzfai=file(params.gzfai)
+  gzi=file(params.gzi)
 }
 else if(params.h38 ){
-  fasta=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa");
-  fai=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.fai");
-  fastagz=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz");
-  gzfai=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz.fai");
-  gzi=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz.gzi");
+  fasta=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa")
+  fai=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.fai")
+  fastagz=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz")
+  gzfai=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz.fai")
+  gzi=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz.gzi")
 }
 else if(params.hs37d5){
-  fasta=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa");
-  fai=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.fai");
-  fastagz=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz");
-  gzfai=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz.fai");
-  gzi=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz.gzi");
+  fasta=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa")
+  fai=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.fai")
+  fastagz=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz")
+  gzfai=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz.fai")
+  gzi=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz.gzi")
 }
 else if(params.grch37primary){
-  fasta=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa");
-  fai=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.fai");
-  fastagz=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz");
-  gzfai=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz.fai");
-  gzi=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz.gzi");
+  fasta=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa")
+  fai=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.fai")
+  fastagz=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz")
+  gzfai=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz.fai")
+  gzi=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz.gzi")
 }
 else if(params.hg19chr20 ){
-  fasta=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa");
-  fai=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.fai");
-  fastagz=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz");
-  gzfai=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz.fai");
-  gzi=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz.gzi");
+  fasta=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa")
+  fai=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.fai")
+  fastagz=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz")
+  gzfai=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz.fai")
+  gzi=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz.gzi")
 }
 else if(params.hg19 ){
-  fasta=file("s3://deepvariant-data/genomes/hg19/hg19.fa");
-  fai=file("s3://deepvariant-data/genomes/hg19/hg19.fa.fai");
-  fastagz=file("s3://deepvariant-data/genomes/hg19/hg19.fa.gz");
-  gzfai=file("s3://deepvariant-data/genomes/hg19/hg19.fa.gz.fai");
-  gzi=file("s3://deepvariant-data/genomes/hg19/hg19.fa.gz.gzi");
+  fasta=file("s3://deepvariant-data/genomes/hg19/hg19.fa")
+  fai=file("s3://deepvariant-data/genomes/hg19/hg19.fa.fai")
+  fastagz=file("s3://deepvariant-data/genomes/hg19/hg19.fa.gz")
+  gzfai=file("s3://deepvariant-data/genomes/hg19/hg19.fa.gz.fai")
+  gzi=file("s3://deepvariant-data/genomes/hg19/hg19.fa.gz.gzi")
 }
 
 else{
-  System.out.println(" --fasta \"/path/to/your/genome\"  params is required and was not found! ");
-  System.out.println(" or you can use standard genome versions by typing --hg19 or --h38 ");
+  System.out.println(" --fasta \"/path/to/your/genome\"  params is required and was not found! ")
+  System.out.println(" or you can use standard genome versions by typing --hg19 or --h38 ")
   System.exit(0);
 }
 
@@ -191,9 +154,6 @@ else{
 /*--------------------------------------------------
   Bam related input files
 ---------------------------------------------------*/
-
-params.getBai="false";
-
 if(params.test){
     params.bam_folder="$baseDir/testdata"
 }
@@ -203,28 +163,11 @@ assert (params.bam_folder != true) && (params.bam_folder != null) : "please spec
 
 params.bam_file_prefix="*"
 
-if( !("false").equals(params.getBai)){
+if( !(false).equals(params.getBai)){
   Channel.fromFilePairs("${params.bam_folder}/${params.bam_file_prefix}*.{bam,bam.bai}").set{bamChannel}
 }else{
   Channel.fromPath("${params.bam_folder}/${params.bam_file_prefix}*.bam").map{ file -> tuple(file.name, file) }.set{bamChannel}
 }
-
-/*--------------------------------------------------
-  Output directory & email
----------------------------------------------------*/
-params.outdir = "./results";
-params.email = false
-
-/*--------------------------------------------------
-  Params for the Read Group Line to be added just in
-  case its needed.
-  If not given, default values are used.
----------------------------------------------------*/
-params.rgid=4;
-params.rglb="lib1";
-params.rgpl="illumina";
-params.rgpu="unit1";
-params.rgsm=20;
 
 /*--------------------------------------------------
   For workflow summary
