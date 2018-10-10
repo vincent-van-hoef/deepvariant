@@ -4,27 +4,6 @@
 
 If you are having trouble with the inputs for the tool its recommended that you read [about preprocessing](usage.md#about-preprocessing) and [BAM folder input](usage.md#--bam_folder)
 
-Use this to specify the location of your input folder containing BAM files
-
-- `--bam_folder`
-
-```
---bam_folder "/path/to/folder/where/bam/files/are"            REQUIRED
---getBai "true"                                               OPTIONAL  (default: "false")
-```
-
-- In case only some specific files inside the BAM folder should be used as input, a file prefix can be defined by:
-  - `--bam_file_prefix`
-
-```
---bam_file_prefix MYPREFIX
-```
-
-All the BAM files on which the variant calling should be performed should be all stored in the same folder. If you already have the index files (BAI) they should be stored in the same folder and called with the same prefix as the correspoding BAM file ( e.g. file.bam and file.bam.bai ).
-
-**! TIP**
-All the input files can be used in s3 buckets too and the s3://path/to/files/in/bucket can be used instead of a local path.
-
 ## Data organization
 
 The pipeline can't take a list of multiple input files - it takes a glob expression. If your input files are scattered in different paths then we recommend that you generate a directory with symlinked files. If running in paired end mode please make sure that your files are sensibly named so that they can be properly paired. See the previous point.
