@@ -2,6 +2,7 @@ From:nfcore/base
 Bootstrap:docker
 
 %labels
+    MAINTAINER Phil Palmer <phil@lifebit.ai>
     DESCRIPTION Singularity image containing all requirements for the nf-core/deepvariant pipeline
     VERSION 1.0dev
 
