@@ -42,6 +42,7 @@ def helpMessage() {
       --exome                       For exome bam files
       --bed                         Path to bedfile
       --j                           Number of cores used by machine for makeExamples (default = 2)
+      --modelBase                   Base directory for location of model folder (default = "s3://deepvariant-data")
       --modelFolder                 Folder containing own DeepVariant trained data model
       --modelName                   Name of own DeepVariant trained data model
       --rgid                        Bam file read group line id incase its needed (default = 4)
@@ -74,10 +75,12 @@ if (params.help){
 
 
 if(params.exome){
-  model=file("s3://deepvariant-data/models/exome")
+  model = Channel
+      .fromPath("${modelFolder}/exome")
 }
 else{
-  model=file(params.modelFolder)
+  model = Channel
+      .fromPath(params.modelFolder)
 }
 
 
