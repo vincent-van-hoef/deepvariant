@@ -86,9 +86,20 @@ else{
 /*--------------------------------------------------
   Using the BED file
 ---------------------------------------------------*/
+// if(params.exome){
+//   assert (params.bed != true) && (params.bed != null) : "please specify --bed option (--bed bedfile)"
+//   bedfile=file("${params.bed}")
+// }
+//
+// if( params.bismark_index && params.aligner == 'bismark' ){
+//     bismark_index = Channel
+//         .fromPath(params.bismark_index)
+//         .ifEmpty { exit 1, "Bismark index not found: ${params.bismark_index}" }
+
 if(params.exome){
-  assert (params.bed != true) && (params.bed != null) : "please specify --bed option (--bed bedfile)"
-  bedfile=file("${params.bed}")
+  bedfile = Channel
+      .fromPath(params.bed)
+      .ifEmpty { exit 1, "please specify --bed option (--bed bedfile)"}
 }
 
 /*--------------------------------------------------
@@ -144,9 +155,7 @@ else if(params.hg19 ){
 }
 
 else{
-  System.out.println(" --fasta \"/path/to/your/genome\"  params is required and was not found! ")
-  System.out.println(" or you can use standard genome versions by typing --hg19 or --h38 ")
-  System.exit(0);
+  exit 1, "--fasta \"/path/to/your/genome\"  params is required and was not found! or you can use standard genome versions by typing --hg19 or --h38"
 }
 
 
@@ -278,8 +287,10 @@ process preprocessFASTA{
   file fastagz from fastagz
   file gzfai from gzfai
   file gzi from gzi
+
   output:
   set file(fasta),file("${fasta}.fai"),file("${fasta}.gz"),file("${fasta}.gz.fai"), file("${fasta}.gz.gzi") into fastaChannel
+
   script:
   """
   [[ "${params.fai}"=="nofai" ]] &&  samtools faidx $fasta || echo " fai file of user is used, not created"
@@ -307,20 +318,22 @@ process preprocessBAM{
 
   input:
   set val(prefix), file(bam) from bamChannel
+
   output:
   set file("ready/${bam[0]}"), file("ready/${bam[0]}.bai") into completeChannel
+
   script:
   """
-	  mkdir ready
-  [[ `samtools view -H ${bam[0]} | grep '@RG' | wc -l`   > 0 ]] && { mv $bam ready;}|| { java -jar /picard.jar AddOrReplaceReadGroups \
-    I=${bam[0]} \
-    O=ready/${bam[0]} \
-    RGID=${params.rgid} \
-    RGLB=${params.rglb} \
-    RGPL=${params.rgpl} \
-    RGPU=${params.rgpu} \
-    RGSM=${params.rgsm};}
-    cd ready ;samtools index ${bam[0]};
+  mkdir ready
+  [[ `samtools view -H ${bam[0]} | grep '@RG' | wc -l`   > 0 ]] && { mv $bam ready;}|| { picard AddOrReplaceReadGroups \
+  I=${bam[0]} \
+  O=ready/${bam[0]} \
+  RGID=${params.rgid} \
+  RGLB=${params.rglb} \
+  RGPL=${params.rgpl} \
+  RGPU=${params.rgpu} \
+  RGSM=${params.rgsm};}
+  cd ready ;samtools index ${bam[0]};
   """
 }
 
@@ -352,22 +365,24 @@ if(params.bed){
     cpus params.j
 
     input:
-      set file(fasta), file(bam) from all_fa_bam
-      file bedfile from bedfile
+    set file(fasta), file(bam) from all_fa_bam
+    file bedfile from bedfile
+
     output:
-      set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
+    set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
+
     shell:
     '''
-      mkdir shardedExamples
-      time seq 0 !{numberShardsMinusOne} | \
-      parallel --eta --halt 2 \
-        python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/make_examples.zip \
-        --mode calling \
-        --ref !{fasta[1]}.gz\
-        --reads !{bam[1]} \
-        --examples shardedExamples/examples.tfrecord@!{params.j}.gz\
-        --regions !{bedfile} \
-        --task {}
+    mkdir shardedExamples
+    time seq 0 !{numberShardsMinusOne} | \
+    parallel --eta --halt 2 \
+      python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/make_examples.zip \
+      --mode calling \
+      --ref !{fasta[1]}.gz\
+      --reads !{bam[1]} \
+      --examples shardedExamples/examples.tfrecord@!{params.j}.gz\
+      --regions !{bedfile} \
+      --task {}
     '''
   }
 }
@@ -379,19 +394,21 @@ else{
 
     input:
       set file(fasta), file(bam) from all_fa_bam
+
     output:
       set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
+
     shell:
     '''
-      mkdir shardedExamples
-      time seq 0 !{numberShardsMinusOne} | \
-      parallel --eta --halt 2 \
-        python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/make_examples.zip \
-        --mode calling \
-        --ref !{fasta[1]}.gz\
-        --reads !{bam[1]} \
-        --examples shardedExamples/examples.tfrecord@!{params.j}.gz\
-        --task {}
+    mkdir shardedExamples
+    time seq 0 !{numberShardsMinusOne} | \
+    parallel --eta --halt 2 \
+      python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/make_examples.zip \
+      --mode calling \
+      --ref !{fasta[1]}.gz\
+      --reads !{bam[1]} \
+      --examples shardedExamples/examples.tfrecord@!{params.j}.gz\
+      --task {}
     '''
   }
 }
@@ -411,8 +428,10 @@ process call_variants{
   input:
   set file(fasta),file("${fasta}.fai"),file("${fasta}.gz"),file("${fasta}.gz.fai"), file("${fasta}.gz.gzi"),val(bam), file("shardedExamples") from examples
   file 'dv2/models' from model
+
   output:
   set file(fasta),file("${fasta}.fai"),file("${fasta}.gz"),file("${fasta}.gz.fai"), file("${fasta}.gz.gzi"), val(bam), file('call_variants_output.tfrecord') into called_variants
+
   script:
   """
   python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/call_variants.zip \
@@ -439,14 +458,16 @@ process postprocess_variants{
   publishDir params.outdir, mode: 'copy'
   input:
   set file(fasta),file("${fasta}.fai"),file("${fasta}.gz"),file("${fasta}.gz.fai"), file("${fasta}.gz.gzi"), val(bam),file('call_variants_output.tfrecord') from called_variants
+
   output:
    set val(bam),file("${bam}.vcf") into postout
+
   script:
   """
-    python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/postprocess_variants.zip \
-    --ref "${fasta}.gz" \
-    --infile call_variants_output.tfrecord \
-    --outfile "${bam}.vcf"
+  python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/postprocess_variants.zip \
+  --ref "${fasta}.gz" \
+  --infile call_variants_output.tfrecord \
+  --outfile "${bam}.vcf"
   """
 }
 
