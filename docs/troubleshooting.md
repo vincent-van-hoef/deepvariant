@@ -1,25 +1,8 @@
 # nf-core/deepvariant: Troubleshooting
 
-## About preprocessing
-
-DeepVariant, in order to run at its fastest, requires some indexed and compressed versions of both the reference genome and the BAM files. With DeepVariant in Nextflow, if you wish, you can only use as an input the fasta and the BAM file and let us do the work for you in a clean and standarized way (standard tools like [samtools](http://samtools.sourceforge.net/) are used for indexing and every step is run inside of a Docker container).
-
-This is how the list of the needed input files looks like. If these are passed all as input parameters, the preprocessing steps will be skipped.
-
-```
-NA12878_S1.chr20.10_10p1mb.bam   NA12878_S1.chr20.10_10p1mb.bam.bai
-ucsc.hg19.chr20.unittest.fasta   ucsc.hg19.chr20.unittest.fasta.fai
-ucsc.hg19.chr20.unittest.fasta.gz  ucsc.hg19.chr20.unittest.fasta.gz.fai   ucsc.hg19.chr20.unittest.fasta.gz.gzi
-```
-
-If you do not have all of them, these are the file you can give as input to the Nextflow pipeline, and the rest will be automatically produced for you .
-
-```
-NA12878_S1.chr20.10_10p1b.bam
-ucsc.hg19.chr20.unittest.fasta
-```
-
 ## Input files not found
+
+If you are having trouble with the inputs for the tool its recommended that you read [about preprocessing](usage.md#about-preprocessing) and [BAM folder input](usage.md#--bam_folder)
 
 Use this to specify the location of your input folder containing BAM files
 

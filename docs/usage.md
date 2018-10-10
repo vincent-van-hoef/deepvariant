@@ -57,7 +57,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run main.nf --hg19 --bam_folder "s3://deepvariant-data/test-bam/"
+nextflow run nf-core/deepvariant --hg19 --bam_folder "s3://deepvariant-data/test-bam/"
 ```
 
 Note that the pipeline will create the following files in your working directory:
@@ -204,8 +204,8 @@ If the optional parameters are not passed, they will be automatically be produce
 If you are running on exome data you need to prodive the `--exome` flag so that the right verison of the model will be used.
 Moreover, you can provide a bed file.
 
-```
-nextflow run main.nf --exome --hg19 --bam_folder myBamFolder --bed myBedFile
+```bash
+nextflow run nf-core/deepvariant --exome --hg19 --bam_folder myBamFolder --bed myBedFile
 ```
 
 ### Advanced Parameters
@@ -229,7 +229,7 @@ The default one is the 0.6.0 Version for the whole genome. So if that is what yo
 If you want to access the version 0.6.0 for the whole exome model, you need to use the --exome flag.
 
 ```
-nextflow run main.nf --exome --hg19 --bam_folder myBamFolder --bed myBedFile
+nextflow run nf-core/deepvariant --exome --hg19 --bam_folder myBamFolder --bed myBedFile
 ```
 
 In case you want to use another version of the model you can change it by:

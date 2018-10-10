@@ -1,13 +1,3 @@
-# nf-core/deepvariant Contributing Guidelines
-
-Hi there! Many thanks for taking an interest in improving nf-core/deepvariant.
-
-We try to manage the required tasks for nf-core/deepvariant using GitHub issues, you probably came to this page when creating one. Please use the prefilled template to save time.
-
-However, don't be put off by this template - other more general issues and suggestions are welcome! Contributions to the code are even more welcome ;)
-
-> If you need help using nf-core/deepvariant then the best place to go is the Gitter chatroom where you can ask us questions directly: https://gitter.im/nf-core/Lobby
-
 # nf-core/deepvariant: Contributing Guidelines
 
 Hi there! Many thanks for taking an interest in improving nf-core/deepvariant.

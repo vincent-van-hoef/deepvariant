@@ -6,6 +6,7 @@
 
 [![Build Status](https://travis-ci.org/nf-core/deepvariant.svg?branch=master)](https://travis-ci.org/nf-core/deepvariant)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A50.32.0-brightgreen.svg)](https://www.nextflow.io/)
+[![Gitter](https://img.shields.io/badge/gitter-%20join%20chat%20%E2%86%92-4fb99a.svg)](https://gitter.im/nf-core/Lobby)
 
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg)](http://bioconda.github.io/)
 [![Docker](https://img.shields.io/docker/automated/nfcore/deepvariant.svg)](https://hub.docker.com/r/nfcore/deepvariant)
@@ -33,10 +34,8 @@ https://research.googleblog.com/2017/12/deepvariant-highly-accurate-genomes.html
 **Warning DeepVariant can be very computationally intensive to run**
 A typical run on **whole genome data** looks like this:
 
-```
-git clone https://github.com/lifebit-ai/DeepVariant
-cd DeepVariant
-nextflow run main.nf --hg19 --bam_folder testdata
+```bash
+nextflow run nf-core/deepvariant --hg19 --bam_folder testdata
 ```
 
 In this case variants are called on the two bam files contained in the lifebit-test-data/bam s3 bucket. The hg19 version of the reference genome is used.
@@ -44,10 +43,8 @@ Two vcf files are produced and can be found in the folder "results"
 
 A typical run on **whole exome data** looks like this:
 
-```
-git clone https://github.com/lifebit-ai/DeepVariant
-cd DeepVariant
-nextflow run main.nf --exome --hg19 --bam_folder myBamFolder --bed myBedFile"
+```bash
+nextflow run nf-core/deepvariant --exome --hg19 --bam_folder myBamFolder --bed myBedFile
 ```
 
 ## Documentation
@@ -72,7 +69,7 @@ Some input files ar optional and if not given, they will be automatically create
 The worklow **accepts one reference genome and multiple BAM files as input**. The variant calling for the several input BAM files will be processed completely indipendently and will produce indipendent VCF result files. The advantage of this approach is that the variant calling of the different BAM files can be parallelized internally by Nextflow and take advantage of all the cores of the machine in order to get the results at the fastest.
 
 <p align="center">
-  <img src="https://github.com/lifebit-ai/DeepVariant/blob/master/pics/pic_workflow.jpg">
+  <img src="https://github.com/nf-core/deepvariant/blob/master/pics/pic_workflow.jpg">
 </p>
 
 ## Credits

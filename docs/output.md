@@ -8,7 +8,7 @@ The output from DeepVariant is a variant call file or vcf
 
 For further reading and documentation about deepvariant see [google/deepvariant](https://github.com/google/deepvariant)
 
-**Output directory: `results`**
+**Output directory: `results`** (by deafault)
 
 - `pipeline_info`
   - produced by nextflow
