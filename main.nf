@@ -22,7 +22,9 @@ def helpMessage() {
     nextflow run nf-core/deepvariant --genome hg19 --bam_folder "s3://deepvariant-data/test-bam/" -profile standard,docker
 
     Mandatory arguments:
-      --bam_folder                  Path to folder containing BAM files (reads must be aligned to specified reference file, see below)
+      --bam_folder                  Path to folder containing BAM files (reads must have been aligned to specified reference file, see below)
+      OR
+      --bam                         Path to BAM file (reads must have been aligned to specified reference file, see below)
 
     References:                     If you wish to overwrite deafult reference of hg19.
       --genome                      Refernce genome: hg19 (default) | hg19chr20 (for testing) | h38 | grch37primary | hs37d5
@@ -149,19 +151,20 @@ else{
 /*--------------------------------------------------
   Bam related input files
 ---------------------------------------------------*/
-if(params.test){
-    params.bam_folder="$baseDir/testdata"
-}
-
-assert (params.bam_folder != true) && (params.bam_folder != null) : "please specify --bam_folder option (--bam_folder bamfolder)"
-
-
-params.bam_file_prefix="*"
-
-if( !(false).equals(params.getBai)){
-  Channel.fromFilePairs("${params.bam_folder}/${params.bam_file_prefix}*.{bam,bam.bai}").set{bamChannel}
-}else{
-  Channel.fromPath("${params.bam_folder}/${params.bam_file_prefix}*.bam").map{ file -> tuple(file.name, file) }.set{bamChannel}
+if(params.bam_folder) {
+  Channel
+      .fromPath("${params.bam_folder}/${params.bam_file_prefix}*.bam")
+      .ifEmpty { exit 1, "${params.bam_folder}/${params.bam_file_prefix}*.bam not found"}
+      .map{ file -> tuple(file.name, file) }
+      .set{bamChannel}
+} else if(params.bam) {
+  Channel
+      .fromPath(params.bam)
+      .ifEmpty { exit 1, "${params.bam} not found"}
+      .map{ file -> tuple(file.name, file) }
+      .set{bamChannel}
+} else {
+  exit 1, "please specify --bam OR --bam_folder"
 }
 
 /*--------------------------------------------------
@@ -193,7 +196,8 @@ nf-core/deepvariant v${params.pipelineVersion}"
 def summary = [:]
 summary['Pipeline Name']    = 'nf-core/deepvariant'
 summary['Pipeline Version'] = params.pipelineVersion
-summary['Bam folder']       = params.bam_folder
+if(params.bam_folder) summary['Bam folder'] = params.bam_folder
+if(params.bam) summary['Bam file']          = params.bam
 if(params.genome) summary['Reference genome']                 = params.genome
 if(params.fasta != 'nofasta') summary['Fasta Ref']            = params.fasta
 if(params.fai != 'nofai') summary['Fasta Index']              = params.fai
@@ -344,7 +348,7 @@ all_fa.cross(all_bam)
 if(params.bed){
   process makeExamples_with_bed{
 
-      tag "${bam[1]}"
+    tag "${bam[1]}"
     cpus params.j
 
     input:
