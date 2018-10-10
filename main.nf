@@ -19,17 +19,13 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/deepvariant --hg19 --bam_folder "s3://deepvariant-data/test-bam/" -profile standard,docker
+    nextflow run nf-core/deepvariant --genome hg19 --bam_folder "s3://deepvariant-data/test-bam/" -profile standard,docker
 
     Mandatory arguments:
       --bam_folder                  Path to folder containing BAM files (reads must be aligned to specified reference file, see below)
 
     References:                     If you wish to overwrite deafult reference of hg19.
-      --hg19                        Default for if reads were aligned against hg19 reference genome to produce input bam file(s)
-      --hg19chr20                   To peform DeepVariant on chr20 only for testing purposes
-      --h38                         Use if reads were aligned against GRCh38 reference genome to produce input bam file(s)
-      --grch37primary               Use if reads were aligned against GRCh37 primary reference genome to produce input bam file(s)
-      --hs37d5                      Use if reads were aligned against hs37d5 reference genome to produce input bam file(s)
+      --genome                      Refernce genome: hg19 (default) | hg19chr20 (for testing) | h38 | grch37primary | hs37d5
       OR
       --fasta                       Path to fasta reference
       --fai                         Path to fasta index generated using `samtools faidx`
@@ -86,16 +82,6 @@ else{
 /*--------------------------------------------------
   Using the BED file
 ---------------------------------------------------*/
-// if(params.exome){
-//   assert (params.bed != true) && (params.bed != null) : "please specify --bed option (--bed bedfile)"
-//   bedfile=file("${params.bed}")
-// }
-//
-// if( params.bismark_index && params.aligner == 'bismark' ){
-//     bismark_index = Channel
-//         .fromPath(params.bismark_index)
-//         .ifEmpty { exit 1, "Bismark index not found: ${params.bismark_index}" }
-
 if(params.exome){
   bedfile = Channel
       .fromPath(params.bed)
@@ -118,35 +104,35 @@ if(!("nofasta").equals(params.fasta)){
   gzfai=file(params.gzfai)
   gzi=file(params.gzi)
 }
-else if(params.h38 ){
+else if(params.genome == "h38" ){
   fasta=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa")
   fai=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.fai")
   fastagz=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz")
   gzfai=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz.fai")
   gzi=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz.gzi")
 }
-else if(params.hs37d5){
+else if(params.genome == "hs37d5"){
   fasta=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa")
   fai=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.fai")
   fastagz=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz")
   gzfai=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz.fai")
   gzi=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz.gzi")
 }
-else if(params.grch37primary){
+else if(params.genome == "grch37primary"){
   fasta=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa")
   fai=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.fai")
   fastagz=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz")
   gzfai=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz.fai")
   gzi=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz.gzi")
 }
-else if(params.hg19chr20 ){
+else if(params.genome == "hg19chr20"){
   fasta=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa")
   fai=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.fai")
   fastagz=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz")
   gzfai=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz.fai")
   gzi=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz.gzi")
 }
-else if(params.hg19 ){
+else if(params.genome == "hg19"){
   fasta=file("s3://deepvariant-data/genomes/hg19/hg19.fa")
   fai=file("s3://deepvariant-data/genomes/hg19/hg19.fa.fai")
   fastagz=file("s3://deepvariant-data/genomes/hg19/hg19.fa.gz")
@@ -208,10 +194,7 @@ def summary = [:]
 summary['Pipeline Name']    = 'nf-core/deepvariant'
 summary['Pipeline Version'] = params.pipelineVersion
 summary['Bam folder']       = params.bam_folder
-if(params.hg19) summary['Reference genome']           = "hg19"
-if(params.h38) summary['Reference genome']            = "h38"
-if(params.grch37primary) summary['Reference genome']  = "grch37primary"
-if(params.hs37d5) summary['Reference genome']         = "hs37d5"
+if(params.genome) summary['Reference genome']                 = params.genome
 if(params.fasta != 'nofasta') summary['Fasta Ref']            = params.fasta
 if(params.fai != 'nofai') summary['Fasta Index']              = params.fai
 if(params.fastagz != 'nofastagz') summary['Fasta gzipped ']   = params.fastagz
