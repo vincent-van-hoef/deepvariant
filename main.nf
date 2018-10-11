@@ -42,7 +42,6 @@ def helpMessage() {
                                     Available: standard, conda, docker, singularity, awsbatch, test
       --exome                       For exome bam files
       --bed                         Path to bedfile
-      --j                           Number of cores used by machine for makeExamples (default = 2)
       --modelBase                   Base directory for location of model folder (default = "s3://deepvariant-data")
       --modelFolder                 Folder containing own DeepVariant trained data model
       --modelName                   Name of own DeepVariant trained data model
@@ -93,14 +92,6 @@ if(params.exome){
       .fromPath(params.bed)
       .ifEmpty { exit 1, "please specify --bed option (--bed bedfile)"}
 }
-
-/*--------------------------------------------------
-  Cores of the machine --> used for process makeExamples
-  default:2
----------------------------------------------------*/
-int cores = Runtime.getRuntime().availableProcessors()
-params.j=cores
-numberShardsMinusOne=params.j-1
 
 //if user inputs fasta set their reference files otherwise use hg19 as default
 if( !(false).equals(params.fasta)){
@@ -267,7 +258,6 @@ process preprocessFASTA{
   [[ "${params.gzi}"==false ]] && bgzip -c -i ${fasta} > ${fasta}.gz || echo "gzi file of user is used, not created"
   [[ "${params.gzfai}"==false ]] && samtools faidx "${fasta}.gz" || echo "gz.fai file of user is used, not created"
   """
-
 }
 
 
@@ -307,7 +297,7 @@ process preprocessBAM{
 }
 
 
-
+//make tupule of reference files using fasta file as identifier
 fastaChannel.map{file -> tuple (1,file[0],file[1],file[2],file[3],file[4])}
             .set{all_fa};
 
@@ -331,7 +321,6 @@ if(params.bed){
   process makeExamples_with_bed{
 
     tag "${bam[1]}"
-    cpus params.j
 
     input:
     set file(fasta), file(bam) from all_fa_bam
@@ -341,6 +330,7 @@ if(params.bed){
     set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
 
     shell:
+    numberShardsMinusOne=task.cpus-1
     '''
     mkdir shardedExamples
     time seq 0 !{numberShardsMinusOne} | \
@@ -349,7 +339,7 @@ if(params.bed){
       --mode calling \
       --ref !{fasta[1]}.gz\
       --reads !{bam[1]} \
-      --examples shardedExamples/examples.tfrecord@!{params.j}.gz\
+      --examples shardedExamples/examples.tfrecord@!{task.cpus}.gz\
       --regions !{bedfile} \
       --task {}
     '''
@@ -359,7 +349,6 @@ else{
   process makeExamples{
 
     tag "${bam[1]}"
-    cpus params.j
 
     input:
       set file(fasta), file(bam) from all_fa_bam
@@ -368,6 +357,7 @@ else{
       set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
 
     shell:
+    numberShardsMinusOne=task.cpus-1
     '''
     mkdir shardedExamples
     time seq 0 !{numberShardsMinusOne} | \
@@ -376,7 +366,7 @@ else{
       --mode calling \
       --ref !{fasta[1]}.gz\
       --reads !{bam[1]} \
-      --examples shardedExamples/examples.tfrecord@!{params.j}.gz\
+      --examples shardedExamples/examples.tfrecord@!{task.cpus}.gz\
       --task {}
     '''
   }
@@ -392,7 +382,6 @@ process call_variants{
 
 
   tag "${bam}"
-  cpus params.j
 
   input:
   set file(fasta),file("${fasta}.fai"),file("${fasta}.gz"),file("${fasta}.gz.fai"), file("${fasta}.gz.gzi"),val(bam), file("shardedExamples") from examples
@@ -405,9 +394,9 @@ process call_variants{
   """
   python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/call_variants.zip \
     --outfile call_variants_output.tfrecord \
-    --examples shardedExamples/examples.tfrecord@${params.j}.gz \
+    --examples shardedExamples/examples.tfrecord@${task.cpus}.gz \
     --checkpoint dv2/models/${params.modelName} \
-    --num_readers ${params.j}
+    --num_readers ${task.cpus}
   """
 }
 
@@ -422,9 +411,9 @@ process postprocess_variants{
 
 
   tag "$bam"
-  cpus params.j
 
   publishDir params.outdir, mode: 'copy'
+
   input:
   set file(fasta),file("${fasta}.fai"),file("${fasta}.gz"),file("${fasta}.gz.fai"), file("${fasta}.gz.gzi"), val(bam),file('call_variants_output.tfrecord') from called_variants
 
