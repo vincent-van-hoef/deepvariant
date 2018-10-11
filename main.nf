@@ -104,7 +104,6 @@ numberShardsMinusOne=params.j-1
 
 //if user inputs fasta set their reference files otherwise use hg19 as default
 if( !(false).equals(params.fasta)){
-  print "Using your fasta, ref genome should be null\n"
   fasta=file(params.fasta)
   fai = params.fai ? file(params.fai) : false
   fastagz = params.fai ? file(params.fastagz) : false
