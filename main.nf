@@ -28,6 +28,7 @@ def helpMessage() {
 
     References:                     If you wish to overwrite deafult reference of hg19.
       --genome                      Refernce genome: hg19 (default) | hg19chr20 (for testing) | h38 | grch37primary | hs37d5
+      --genomes_base                Base directory location of genomes (default = "s3://deepvariant-data/genomes")
       OR
       --fasta                       Path to fasta reference
       --fai                         Path to fasta index generated using `samtools faidx`
@@ -101,54 +102,33 @@ int cores = Runtime.getRuntime().availableProcessors()
 params.j=cores
 numberShardsMinusOne=params.j-1
 
-
-if(!("nofasta").equals(params.fasta)){
+//if user inputs fasta set their reference files otherwise use hg19 as default
+if( !(false).equals(params.fasta)){
+  print "Using your fasta, ref genome should be null\n"
   fasta=file(params.fasta)
-  fai=file(params.fai)
-  fastagz=file(params.fastagz)
-  gzfai=file(params.gzfai)
-  gzi=file(params.gzi)
-}
-else if(params.genome == "h38" ){
-  fasta=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa")
-  fai=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.fai")
-  fastagz=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz")
-  gzfai=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz.fai")
-  gzi=file("s3://deepvariant-data/genomes/h38/GRCh38.p10.genome.fa.gz.gzi")
-}
-else if(params.genome == "hs37d5"){
-  fasta=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa")
-  fai=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.fai")
-  fastagz=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz")
-  gzfai=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz.fai")
-  gzi=file("s3://deepvariant-data/genomes/hs37d5/hs37d5.fa.gz.gzi")
-}
-else if(params.genome == "grch37primary"){
-  fasta=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa")
-  fai=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.fai")
-  fastagz=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz")
-  gzfai=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz.fai")
-  gzi=file("s3://deepvariant-data/genomes/GRCh37.dna.primary/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz.gzi")
-}
-else if(params.genome == "hg19chr20"){
-  fasta=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa")
-  fai=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.fai")
-  fastagz=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz")
-  gzfai=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz.fai")
-  gzi=file("s3://deepvariant-data/genomes/hg19chr20/chr20.fa.gz.gzi")
-}
-else if(params.genome == "hg19"){
-  fasta=file("s3://deepvariant-data/genomes/hg19/hg19.fa")
-  fai=file("s3://deepvariant-data/genomes/hg19/hg19.fa.fai")
-  fastagz=file("s3://deepvariant-data/genomes/hg19/hg19.fa.gz")
-  gzfai=file("s3://deepvariant-data/genomes/hg19/hg19.fa.gz.fai")
-  gzi=file("s3://deepvariant-data/genomes/hg19/hg19.fa.gz.gzi")
+  fai = params.fai ? file(params.fai) : false
+  fastagz = params.fai ? file(params.fastagz) : false
+  gzfai = params.fai ? file(params.gzfai) : false
+  gzi = params.fai ? file(params.gzi) : false
+} else {
+  params.genome = 'hg19'
 }
 
-else{
-  exit 1, "--fasta \"/path/to/your/genome\"  params is required and was not found! or you can use standard genome versions by typing --hg19 or --h38"
+//set genome options
+if ( params.genome ){
+  fasta = file( params.genome ? params.genomes[ params.genome ].fasta ?: false : false )
+  fai = file( params.genome ? params.genomes[ params.genome ].fai ?: false : false )
+  fastagz = file( params.genome ? params.genomes[ params.genome ].fastagz ?: false : false )
+  gzfai = file( params.genome ? params.genomes[ params.genome ].gzfai ?: false : false )
+  gzi = file( params.genome ? params.genomes[ params.genome ].gzi ?: false : false )
+  if( !fasta.exists() ) exit 1, "Fasta file not found: ${params.fasta}"
+  if( !fai.exists() ) exit 1, "Fai file not found: ${params.fai}"
+  if( !fastagz.exists() ) exit 1, "Fastagz file not found: ${params.fastagz}"
+  if( !gzfai.exists() ) exit 1, "gzfai file not found: ${params.gzfai}"
+  if( !gzi.exists() ) exit 1, "gzi file not found: ${params.gzi}"
+} else if( (false).equals(params.fasta)){
+  exit 1, "--fasta \"/path/to/your/genome\"  params is required and was not found! or you can use standard genome versions by typing --genome hg19 or --genome h38"
 }
-
 
 
 /*--------------------------------------------------
@@ -201,13 +181,13 @@ summary['Pipeline Name']    = 'nf-core/deepvariant'
 summary['Pipeline Version'] = params.pipelineVersion
 if(params.bam_folder) summary['Bam folder'] = params.bam_folder
 if(params.bam) summary['Bam file']          = params.bam
-if(params.genome) summary['Reference genome']                 = params.genome
-if(params.fasta != 'nofasta') summary['Fasta Ref']            = params.fasta
-if(params.fai != 'nofai') summary['Fasta Index']              = params.fai
-if(params.fastagz != 'nofastagz') summary['Fasta gzipped ']   = params.fastagz
-if(params.gzfai != 'nogzfai') summary['Fasta gzipped Index']  = params.gzfai
-if(params.gzi != 'nogzi') summary['Fasta bgzip Index']        = params.gzi
-if(params.rgid != 4) summary['BAM Read Group ID']            = params.rgid
+if(params.genome) summary['Reference genome']             = params.genome
+if(params.fasta != false) summary['Fasta Ref']            = params.fasta
+if(params.fai != false) summary['Fasta Index']            = params.fai
+if(params.fastagz != false) summary['Fasta gzipped ']     = params.fastagz
+if(params.gzfai != false) summary['Fasta gzipped Index']  = params.gzfai
+if(params.gzi != false) summary['Fasta bgzip Index']      = params.gzi
+if(params.rgid != 4) summary['BAM Read Group ID']         = params.rgid
 if(params.rglb != 'lib1') summary['BAM Read Group Library']         = params.rglb
 if(params.rgpl != 'illumina') summary['BAM Read Group Platform']    = params.rgpl
 if(params.rgpu != 'unit1') summary['BAM Read Group Platform Unit']  = params.rgpu
@@ -283,10 +263,10 @@ process preprocessFASTA{
 
   script:
   """
-  [[ "${params.fai}"=="nofai" ]] &&  samtools faidx $fasta || echo " fai file of user is used, not created"
-  [[ "${params.fastagz}"=="nofastagz" ]]  && bgzip -c ${fasta} > ${fasta}.gz || echo "fasta.gz file of user is used, not created "
-  [[ "${params.gzi}"=="nogzi" ]] && bgzip -c -i ${fasta} > ${fasta}.gz || echo "gzi file of user is used, not created"
-  [[ "${params.gzfai}"=="nogzfai" ]] && samtools faidx "${fasta}.gz" || echo "gz.fai file of user is used, not created"
+  [[ "${params.fai}"==false ]] &&  samtools faidx $fasta || echo " fai file of user is used, not created"
+  [[ "${params.fastagz}"==false ]]  && bgzip -c ${fasta} > ${fasta}.gz || echo "fasta.gz file of user is used, not created "
+  [[ "${params.gzi}"==false ]] && bgzip -c -i ${fasta} > ${fasta}.gz || echo "gzi file of user is used, not created"
+  [[ "${params.gzfai}"==false ]] && samtools faidx "${fasta}.gz" || echo "gz.fai file of user is used, not created"
   """
 
 }
