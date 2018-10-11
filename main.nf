@@ -440,6 +440,27 @@ process postprocess_variants{
   """
 }
 
+/*
+ * Parse software version numbers
+ */
+process get_software_versions {
+
+    output:
+    file 'software_versions_mqc.yaml' into software_versions_yaml
+
+    script:
+    """
+    echo $workflow.manifest.version &> v_nf_deepvariant.txt
+    echo $workflow.nextflow.version &> v_nextflow.txt
+    python --version &> v_python.txt
+    pip --version &> v_pip.txt
+    samtools --version &> v_samtools.txt
+    lbzip2 --version &> v_lbzip2.txt
+    bzip2 --version &> v_bzip2.txt
+    scrape_software_versions.py &> software_versions_mqc.yaml
+    """
+}
+
 workflow.onComplete {
   // Set up the e-mail variables
   def subject = "[nf-core/deepvariant] Successful: $workflow.runName"

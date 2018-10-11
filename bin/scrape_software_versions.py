@@ -4,16 +4,24 @@ from collections import OrderedDict
 import re
 
 regexes = {
-    'nf-core/deepvariant': ['v_pipeline.txt', r"(\S+)"],
+    'nf-core/deepvariant': ['v_nf_deepvariant.txt', r"(\S+)"],
     'Nextflow': ['v_nextflow.txt', r"(\S+)"],
-    'FastQC': ['v_fastqc.txt', r"FastQC v(\S+)"],
-    'MultiQC': ['v_multiqc.txt', r"multiqc, version (\S+)"],
+    'Python': ['v_python.txt', r"Python (\S+)"],
+    'Pip': ['v_pip.txt', r"pip (\S+)"],
+    'Samtools': ['v_samtools.txt', r"samtools (\S+)"],
+    'Htslib': ['v_samtools.txt', r"Using htslib (\S+)"],
+    'Lbzip2': ['v_lbzip2.txt', r"lbzip2 version (\S+)"],
+    'Bzip2': ['v_bzip2.txt', r"bzip2, Version (\S+)"],
 }
 results = OrderedDict()
 results['nf-core/deepvariant'] = '<span style="color:#999999;\">N/A</span>'
 results['Nextflow'] = '<span style="color:#999999;\">N/A</span>'
-results['FastQC'] = '<span style="color:#999999;\">N/A</span>'
-results['MultiQC'] = '<span style="color:#999999;\">N/A</span>'
+results['Python'] = '<span style="color:#999999;\">N/A</span>'
+results['Pip'] = '<span style="color:#999999;\">N/A</span>'
+results['Samtools'] = '<span style="color:#999999;\">N/A</span>'
+results['Htslib'] = '<span style="color:#999999;\">N/A</span>'
+results['Lbzip2'] = '<span style="color:#999999;\">N/A</span>'
+results['Bzip2'] = '<span style="color:#999999;\">N/A</span>'
 
 # Search each file using its regex
 for k, v in regexes.items():
