@@ -77,42 +77,57 @@ if (params.help){
 //set model for call variants either whole genome or exome
 model= params.exome ? 'wes' : 'wgs'
 
-
-/*--------------------------------------------------
-  Using the BED file
----------------------------------------------------*/
-  bedfile = Channel
-      .fromPath(params.bed)
-      .ifEmpty { exit 1, "please specify --bed option (--bed bedfile)"}
-
 //if user inputs fasta set their reference files otherwise use hg19 as default
 if(params.fasta){
-  fasta=file(params.fasta)
-  fai = params.fai ? file(params.fai) : false
-  fastagz = params.fai ? file(params.fastagz) : false
-  gzfai = params.fai ? file(params.gzfai) : false
-  gzi = params.fai ? file(params.gzi) : false
+  fasta = params.fasta
+  fai = params.fai ? params.fai : false
+  fastagz = params.fai ? params.fastagz : false
+  gzfai = params.fai ? params.gzfai : false
+  gzi = params.fai ? params.gzi : false
+  bed = params.bed ? params.bed : false
 } else {
   params.genome = 'hg19'
 }
 
 //set genome options
 if (params.genome){
-  fasta = file( params.genome ? params.genomes[ params.genome ].fasta ?: false : false )
-  fai = file( params.genome ? params.genomes[ params.genome ].fai ?: false : false )
-  fastagz = file( params.genome ? params.genomes[ params.genome ].fastagz ?: false : false )
-  gzfai = file( params.genome ? params.genomes[ params.genome ].gzfai ?: false : false )
-  gzi = file( params.genome ? params.genomes[ params.genome ].gzi ?: false : false )
-  if( !fasta.exists() ) exit 1, "Fasta file not found: ${params.fasta}"
-  if( !fai.exists() ) exit 1, "Fai file not found: ${params.fai}"
-  if( !fastagz.exists() ) exit 1, "Fastagz file not found: ${params.fastagz}"
-  if( !gzfai.exists() ) exit 1, "gzfai file not found: ${params.gzfai}"
-  if( !gzi.exists() ) exit 1, "gzi file not found: ${params.gzi}"
-} else if( !(params.fasta) ){
-  exit 1, "--fasta \"/path/to/your/genome\"  params is required and was not found! or you can use standard genome versions by typing --genome hg19 or --genome h38"
+  fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
+  fai = params.genome ? params.genomes[ params.genome ].fai ?: false : false
+  fastagz = params.genome ? params.genomes[ params.genome ].fastagz ?: false : false
+  gzfai = params.genome ? params.genomes[ params.genome ].gzfai ?: false : false
+  gzi = params.genome ? params.genomes[ params.genome ].gzi ?: false : false
+  bed = params.genome ? params.genomes[ params.genome ].bed ?: false : false
 }
 
+(fastaCh, fastaCh1, fastaCh2, fastaCh3, fastaCh4) = Channel.fromPath(fasta).into(5)
 
+bedCh = Channel
+    .fromPath(bed)
+    .ifEmpty { exit 1, "please specify --bed option (--bed bedfile)"}
+
+if(fai){
+faiCh = Channel
+    .fromPath(fai)
+    .ifEmpty("Fastagz file not found: ${params.fastagz}")
+}
+
+if(fastagz){
+fastaGzCh = Channel
+    .fromPath(fastagz)
+    .ifEmpty("Fastagz file not found: ${params.fastagz}")
+}
+
+if(gzfai){
+gzFaiCh = Channel
+    .fromPath(gzfai)
+    .ifEmpty("gzfai file not found: ${params.gzfai}")
+}
+
+if(gzi){
+gziCh = Channel
+    .fromPath(gzi)
+    .ifEmpty("gzi file not found: ${params.gzi}")
+}
 /*--------------------------------------------------
   Bam related input files
 ---------------------------------------------------*/
@@ -226,30 +241,78 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
   If not they are produced in this process given only the fasta file.
 ********************************************************************/
 
+if(!fai) {
+  process preprocessFAI {
+      publishDir "$baseDir/sampleDerivatives"
 
-process preprocessFASTA{
+      input:
+      file(fasta) from fastaCh1
 
-  publishDir "$baseDir/sampleDerivatives"
+      output:
+      file("${fasta}.fai") into faiCh
 
-
-  input:
-  file fasta from fasta
-  file fai from fai
-  file fastagz from fastagz
-  file gzfai from gzfai
-  file gzi from gzi
-
-  output:
-  set file(fasta),file("${fasta}.fai"),file("${fasta}.gz"),file("${fasta}.gz.fai"), file("${fasta}.gz.gzi") into fastaChannel
-
-  script:
-  """
-  [[ "${params.fai}"==false ]] &&  samtools faidx $fasta || echo " fai file of user is used, not created"
-  [[ "${params.fastagz}"==false ]]  && bgzip -c ${fasta} > ${fasta}.gz || echo "fasta.gz file of user is used, not created "
-  [[ "${params.gzi}"==false ]] && bgzip -c -i ${fasta} > ${fasta}.gz || echo "gzi file of user is used, not created"
-  [[ "${params.gzfai}"==false ]] && samtools faidx "${fasta}.gz" || echo "gz.fai file of user is used, not created"
-  """
+      script:
+      """
+      samtools faidx $fasta
+      """
+  }
+} else {
+  fa_fai = Channel.from()
 }
+
+if(!fastagz) {
+  process preprocessFASTGZ {
+      publishDir "$baseDir/sampleDerivatives"
+
+      input:
+      file(fasta) from fastaCh2
+
+      output:
+      file("*.gz") into (tmpFastaGzCh, fastaGzCh)
+
+      script:
+      """
+      bgzip -c ${fasta} > ${fasta}.gz
+      """
+  }
+}
+
+if(!gzfai) {
+  process preprocessGZFAI {
+    publishDir "$baseDir/sampleDerivatives"
+
+    input:
+    file(fasta) from fastaCh3
+    file(fastagz) from tmpFastaGzCh
+
+    output:
+    file("*.gz.fai") into gzFaiCh
+
+    script:
+    """
+    samtools faidx $fastagz
+    """
+  }
+}
+
+if(!gzi){
+  process preprocessGZI {
+    publishDir "$baseDir/sampleDerivatives"
+
+    input:
+    file(fasta) from fastaCh4
+
+    output:
+    file("*.gz.gzi") into gziCh
+
+    script:
+    """
+    bgzip -c -i ${fasta} > ${fasta}.gz
+    """
+  }
+}
+
+fastaChannel = Channel.from(fastaCh).mix(faiCh, fastaGzCh, gzFaiCh, gziCh, bedCh).collect()
 
 
 /********************************************************************
@@ -289,7 +352,7 @@ process preprocessBAM{
 
 
 //make tupule of reference files using fasta file as identifier
-fastaChannel.map{file -> tuple (1,file[0],file[1],file[2],file[3],file[4])}
+fastaChannel.map{file -> tuple (1,file[0],file[1],file[2],file[3],file[4], file[5])}
             .set{all_fa};
 
 completeChannel.map { file -> tuple(1,file[0],file[1]) }
@@ -314,25 +377,23 @@ all_fa.cross(all_bam)
 
     input:
     set file(fasta), file(bam) from all_fa_bam
-    file bedfile from bedfile
 
     output:
     set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
 
-    shell:
-    '''
+    script:
+    """
     mkdir logs
     mkdir shardedExamples
-
     dv_make_examples.py \
-    --cores 4 \
-    --sample !{bam[1]} \
-    --ref !{fasta[1]}.gz \
-    --reads !{bam[1]} \
-    --regions !{bedfile} \
+    --cores ${task.cpus} \
+    --sample ${bam[1]} \
+    --ref ${fasta[1]}.gz \
+    --reads ${bam[1]} \
+    --regions ${fasta[5]} \
     --logdir logs \
     --examples shardedExamples
-    '''
+    """
   }
 /********************************************************************
   process call_variants
@@ -356,8 +417,8 @@ process call_variants{
   script:
   """
   dv_call_variants.py \
-    --cores 4 \
-    --sample examples \
+    --cores ${task.cpus} \
+    --sample ${bam} \
     --outfile call_variants_output.tfrecord \
     --examples shardedExamples \
     --model ${model}
