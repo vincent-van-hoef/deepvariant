@@ -35,7 +35,7 @@ def helpMessage() {
       --fastagz                     Path to gzipped fasta
       --gzfai                       Path to index of gzipped fasta
       --gzi                         Path to bgzip index format (.gzi) produced by faidx
-      *Pass all five files above to skip preprocessing step
+      *Pass all five files above to skip the fasta preprocessing step
 
       Options:
       -profile                      Configuration profile to use. Can use multiple (comma separated)
@@ -74,27 +74,19 @@ if (params.help){
 }
 
 
-if(params.exome){
-  model = Channel
-      .fromPath("${modelFolder}/exome")
-}
-else{
-  model = Channel
-      .fromPath(params.modelFolder)
-}
+//set model for call variants either whole genome or exome
+model= params.exome ? 'wes' : 'wgs'
 
 
 /*--------------------------------------------------
   Using the BED file
 ---------------------------------------------------*/
-if(params.exome){
   bedfile = Channel
       .fromPath(params.bed)
       .ifEmpty { exit 1, "please specify --bed option (--bed bedfile)"}
-}
 
 //if user inputs fasta set their reference files otherwise use hg19 as default
-if( !(false).equals(params.fasta)){
+if(params.fasta){
   fasta=file(params.fasta)
   fai = params.fai ? file(params.fai) : false
   fastagz = params.fai ? file(params.fastagz) : false
@@ -105,7 +97,7 @@ if( !(false).equals(params.fasta)){
 }
 
 //set genome options
-if ( params.genome ){
+if (params.genome){
   fasta = file( params.genome ? params.genomes[ params.genome ].fasta ?: false : false )
   fai = file( params.genome ? params.genomes[ params.genome ].fai ?: false : false )
   fastagz = file( params.genome ? params.genomes[ params.genome ].fastagz ?: false : false )
@@ -116,7 +108,7 @@ if ( params.genome ){
   if( !fastagz.exists() ) exit 1, "Fastagz file not found: ${params.fastagz}"
   if( !gzfai.exists() ) exit 1, "gzfai file not found: ${params.gzfai}"
   if( !gzi.exists() ) exit 1, "gzi file not found: ${params.gzi}"
-} else if( (false).equals(params.fasta)){
+} else if( !(params.fasta) ){
   exit 1, "--fasta \"/path/to/your/genome\"  params is required and was not found! or you can use standard genome versions by typing --genome hg19 or --genome h38"
 }
 
@@ -171,12 +163,12 @@ summary['Pipeline Name']    = 'nf-core/deepvariant'
 summary['Pipeline Version'] = params.pipelineVersion
 if(params.bam_folder) summary['Bam folder'] = params.bam_folder
 if(params.bam) summary['Bam file']          = params.bam
-if(params.genome) summary['Reference genome']             = params.genome
-if(params.fasta != false) summary['Fasta Ref']            = params.fasta
-if(params.fai != false) summary['Fasta Index']            = params.fai
-if(params.fastagz != false) summary['Fasta gzipped ']     = params.fastagz
-if(params.gzfai != false) summary['Fasta gzipped Index']  = params.gzfai
-if(params.gzi != false) summary['Fasta bgzip Index']      = params.gzi
+if(params.genome) summary['Reference genome']    = params.genome
+if(params.fasta) summary['Fasta Ref']            = params.fasta
+if(params.fai) summary['Fasta Index']            = params.fai
+if(params.fastagz) summary['Fasta gzipped ']     = params.fastagz
+if(params.gzfai) summary['Fasta gzipped Index']  = params.gzfai
+if(params.gzi) summary['Fasta bgzip Index']      = params.gzi
 if(params.rgid != 4) summary['BAM Read Group ID']         = params.rgid
 if(params.rglb != 'lib1') summary['BAM Read Group Library']         = params.rglb
 if(params.rgpl != 'illumina') summary['BAM Read Group Platform']    = params.rgpl
@@ -185,7 +177,6 @@ if(params.rgsm != 20) summary['BAM Read Group Sample']              = params.rgs
 summary['Max Memory']       = params.max_memory
 summary['Max CPUs']         = params.max_cpus
 summary['Max Time']         = params.max_time
-summary['Number of cores for makeExamples'] = params.j
 summary['DeepVariant trained data model folder'] = params.modelFolder
 summary['DeepVariant trained data model name'] = params.modelName
 summary['Output dir']       = params.outdir
@@ -317,8 +308,7 @@ all_fa.cross(all_bam)
 	( if params.n_shards >= 1 parallelization happens automatically)
       ********************************************************************/
 
-if(params.bed){
-  process makeExamples_with_bed{
+  process makeExamples{
 
     tag "${bam[1]}"
 
@@ -330,47 +320,20 @@ if(params.bed){
     set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
 
     shell:
-    numberShardsMinusOne=task.cpus-1
     '''
+    mkdir logs
     mkdir shardedExamples
-    time seq 0 !{numberShardsMinusOne} | \
-    parallel --eta --halt 2 \
-      python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/make_examples.zip \
-      --mode calling \
-      --ref !{fasta[1]}.gz\
-      --reads !{bam[1]} \
-      --examples shardedExamples/examples.tfrecord@!{task.cpus}.gz\
-      --regions !{bedfile} \
-      --task {}
+
+    dv_make_examples.py \
+    --cores 4 \
+    --sample !{bam[1]} \
+    --ref !{fasta[1]}.gz \
+    --reads !{bam[1]} \
+    --regions !{bedfile} \
+    --logdir logs \
+    --examples shardedExamples
     '''
   }
-}
-else{
-  process makeExamples{
-
-    tag "${bam[1]}"
-
-    input:
-      set file(fasta), file(bam) from all_fa_bam
-
-    output:
-      set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
-
-    shell:
-    numberShardsMinusOne=task.cpus-1
-    '''
-    mkdir shardedExamples
-    time seq 0 !{numberShardsMinusOne} | \
-    parallel --eta --halt 2 \
-      python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/make_examples.zip \
-      --mode calling \
-      --ref !{fasta[1]}.gz\
-      --reads !{bam[1]} \
-      --examples shardedExamples/examples.tfrecord@!{task.cpus}.gz\
-      --task {}
-    '''
-  }
-}
 /********************************************************************
   process call_variants
   Doing the variant calling based on the ML trained model.
@@ -392,11 +355,12 @@ process call_variants{
 
   script:
   """
-  python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/call_variants.zip \
+  dv_call_variants.py \
+    --cores 4 \
+    --sample examples \
     --outfile call_variants_output.tfrecord \
-    --examples shardedExamples/examples.tfrecord@${task.cpus}.gz \
-    --checkpoint dv2/models/${params.modelName} \
-    --num_readers ${task.cpus}
+    --examples shardedExamples \
+    --model ${model}
   """
 }
 
@@ -422,7 +386,7 @@ process postprocess_variants{
 
   script:
   """
-  python /opt/conda/pkgs/deepvariant-0.7.0-py27h5d9141f_0/share/deepvariant-0.7.0-0/binaries/DeepVariant/0.7.0/DeepVariant-0.7.0+cl-208818123/postprocess_variants.zip \
+  dv_postprocess_variants.py \
   --ref "${fasta}.gz" \
   --infile call_variants_output.tfrecord \
   --outfile "${bam}.vcf"
