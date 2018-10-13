@@ -73,7 +73,6 @@ if (params.help){
     exit 0
 }
 
-
 //set model for call variants either whole genome or exome
 model= params.exome ? 'wes' : 'wgs'
 
@@ -100,6 +99,7 @@ if (params.genome){
 }
 
 (fastaCh, fastaCh1, fastaCh2, fastaCh3, fastaCh4) = Channel.fromPath(fasta).into(5)
+//(fastaCh, fastaCh1, fastaCh2, fastaCh3, fastaCh4, bedCh) = Channel.fromPath(fasta).into(6)
 
 bedCh = Channel
     .fromPath(bed)
@@ -178,6 +178,7 @@ summary['Pipeline Name']    = 'nf-core/deepvariant'
 summary['Pipeline Version'] = params.pipelineVersion
 if(params.bam_folder) summary['Bam folder'] = params.bam_folder
 if(params.bam) summary['Bam file']          = params.bam
+summary['Bed file']                         = params.bed
 if(params.genome) summary['Reference genome']    = params.genome
 if(params.fasta) summary['Fasta Ref']            = params.fasta
 if(params.fai) summary['Fasta Index']            = params.fai
@@ -192,8 +193,7 @@ if(params.rgsm != 20) summary['BAM Read Group Sample']              = params.rgs
 summary['Max Memory']       = params.max_memory
 summary['Max CPUs']         = params.max_cpus
 summary['Max Time']         = params.max_time
-summary['DeepVariant trained data model folder'] = params.modelFolder
-summary['DeepVariant trained data model name'] = params.modelName
+summary['Model']            = model
 summary['Output dir']       = params.outdir
 summary['Working dir']      = workflow.workDir
 summary['Container Engine'] = workflow.containerEngine
@@ -314,7 +314,6 @@ if(!gzi){
 
 fastaChannel = Channel.from(fastaCh).mix(faiCh, fastaGzCh, gzFaiCh, gziCh, bedCh).collect()
 
-
 /********************************************************************
   process preprocessBAM
   If the user gives the index files for the bam files as an input, they are used
@@ -390,7 +389,7 @@ all_fa.cross(all_bam)
     --sample ${bam[1]} \
     --ref ${fasta[1]}.gz \
     --reads ${bam[1]} \
-    --regions ${fasta[5]} \
+    --regions ${fasta[6]} \
     --logdir logs \
     --examples shardedExamples
     """
