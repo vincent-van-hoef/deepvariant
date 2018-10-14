@@ -9,7 +9,7 @@ Main steps:
     - Also can be skipped if BAM files contain necessary read group line
 - make examples
     - consumes reads and the reference genome to create TensorFlow examples for evaluation with deep learning models
-- call variant
+- call variants
     - consumes TFRecord file(s) of tf.Examples protos created by make_examples and a deep learning model checkpoint and evaluates the model on each example in the input TFRecord.
 - post processing
     - reads all of the output TFRecord files from call_variants, sorts them, combines multi-allelic records, and writes out a VCF file
