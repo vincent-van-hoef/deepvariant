@@ -35,7 +35,6 @@ https://research.googleblog.com/2017/12/deepvariant-highly-accurate-genomes.html
 A typical run on **whole genome data** looks like this:
 
 ```bash
-nextflow run nf-core/deepvariant --genome hg19 --bam_folder testdata
 nextflow run nf-core/deepvariant --genome hg19 --bam testdata/test.bam --bed testdata/test.bed
 ```
 
