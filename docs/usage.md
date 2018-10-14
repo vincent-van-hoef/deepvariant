@@ -13,15 +13,25 @@
     - [`awsbatch`](#awsbatch)
     - [`standard`](#standard)
     - [`none`](#none)
+  - [`--bam`](#--bam)
   - [`--bam_folder`](#--bam_folder)
+  - [`--bam_file_prefix`](#--bam_file_prefix)
+  - [`--bed`](#--bed)
 - [Reference Genomes](#reference-genomes)
-  - [Genome](#genome)
-  - [Fasta](#fasta)
+  - [`--genome`](#--genome)
+    - [`hg19`](#hg19)
+    - [`hg19chr20`](#hg19chr20)
+    - [`h38`](#h38)
+    - [`grch37primary`](#grch37primary)
+    - [`hs37d5`](#hs37d5)
+  - [`--genomes_base`](#--genomes_base)
+  - [`--fasta`](#--fasta)
+  - [`--fai`](#--fai)
+  - [`--fastagz`](#--fastagz)
+  - [`--gzfai`](#--gzfai)
+  - [`--gzi`](#--gzi)
 - [Exome Data](#exome-data)
-- [Advanced Parameters](#advanced-parameters)
-  - [CPUs](#cpus)
-  - [Model](#model)
-  - [Read group](#read-group)
+  - [`--exome`](#--exome)
 - [Job Resources](#job-resources)
 - [Automatic resubmission](#automatic-resubmission)
 - [Custom resource requests](#custom-resource-requests)
@@ -57,7 +67,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/deepvariant --hg19 --bam_folder "s3://deepvariant-data/test-bam/"
+nextflow run nf-core/deepvariant --genome hg19 --bam testdata/test.bam --bed testdata/test.bed
 ```
 
 Note that the pipeline will create the following files in your working directory:
@@ -76,15 +86,16 @@ DeepVariant, in order to run at its fastest, requires some indexed and compresse
 This is how the list of the needed input files looks like. If these are passed all as input parameters, the preprocessing steps will be skipped.
 
 ```
-NA12878_S1.chr20.10_10p1mb.bam   NA12878_S1.chr20.10_10p1mb.bam.bai
-ucsc.hg19.chr20.unittest.fasta   ucsc.hg19.chr20.unittest.fasta.fai
-ucsc.hg19.chr20.unittest.fasta.gz  ucsc.hg19.chr20.unittest.fasta.gz.fai   ucsc.hg19.chr20.unittest.fasta.gz.gzi
+NA12878_S1.chr20.10_10p1mb.bam   test_nist.b37_chr20_100kbp_at_10mb.bed   NA12878_S1.chr20.10_10p1mb.bam.bai
+ucsc.hg19.chr20.unittest.fasta   ucsc.hg19.chr20.unittest.fasta.fai       ucsc.hg19.chr20.unittest.fasta.gz
+ucsc.hg19.chr20.unittest.fasta.gz.fai   ucsc.hg19.chr20.unittest.fasta.gz.gzi
 ```
 
 If you do not have all of them, these are the file you can give as input to the Nextflow pipeline, and the rest will be automatically produced for you .
 
 ```
 NA12878_S1.chr20.10_10p1b.bam
+test_nist.b37_chr20_100kbp_at_10mb.bed
 ucsc.hg19.chr20.unittest.fasta
 ```
 
@@ -128,142 +139,109 @@ Use this parameter to choose a configuration profile. Profiles can give configur
   - A profile with a complete configuration for automated testing
   - Includes links to test data so needs no other parameters
 - `none`
+
   - No configuration at all. Useful if you want to build your own config from scratch and want to avoid loading in the default `base` config profile (not recommended).
+
+### `--bam`
+
+Use this to specify the BAM file
+
+```
+--bam "/path/to/bam/file"
+```
+
+OR
 
 ### `--bam_folder`
 
-Use this to specify the location of your input folder containing BAM files. For example:
+Use this to specify a folder containing BAM files. Allows multiple BAM files to be analyzed at once. All BAM files will be analyzed unless `--bame_file_prefix` is used (see below). For example:
 
 ```
---bam_folder "/path/to/folder/where/bam/files/are"            REQUIRED
---getBai "true"                                               OPTIONAL  (default: "false")
+--bam_folder "/path/to/folder/where/bam/files/are"
 ```
+
+**! TIP**
+All the input files can be used in s3 buckets too and the s3://path/to/files/in/bucket can be used instead of a local path.
+
+### `--bam_file_prefix`
 
 - In case only some specific files inside the BAM folder should be used as input, a file prefix can be defined by:
   - `--bam_file_prefix`
 
 ```
---bam_file_prefix MYPREFIX
+--bam_file_prefix MYPREFIX                                    OPTIONAL
 ```
 
-All the BAM files on which the variant calling should be performed should be all stored in the same folder. If you already have the index files (BAI) they should be stored in the same folder and called with the same prefix as the correspoding BAM file ( e.g. file.bam and file.bam.bai ).
+### `--bed`
 
-**! TIP**
-All the input files can be used in s3 buckets too and the s3://path/to/files/in/bucket can be used instead of a local path.
+- Path to bedfile, specifying region to be analysed must also be supplied
 
 ### Reference Genomes
 
-### Genome
+The pipelines can acccept the refernece genome that was used to create the BAM file(s) in one of two ways. Either the reference genome can be specified eg `--genome hg19` (default) or by supplying a relevant fasta file (and optionally the indexes).
 
-The pipelines can acccept the refernece genome that was used to create the BAM file(s) in one of two ways. Either the reference genome can be specified eg `--hg19` (default) or by supplying the relevant fasta files generated from the `samtools faidx command`.
+### `--genome`
 
 By default the hg19 version of the reference genome is used. If you want to use it, you do not have to pass anything.
 
 If you do not want to use the deafult version, here is how it works:
 
-Two standard version of the genome ( hg19 and GRCh38.p10 ) are prepared with all their compressed and indexed file in a lifebit s3 bucket.
-They can be used by using one of the flags:
+Standard version of the genome are prepared with all their compressed and indexed file in a lifebit s3 bucket.
+They can be used with the following values for the `--genome` tag:
 
-- hg19 (default)
-- `--hg19`
-- chr20 for testing purposes
-  - `--genome hg19chr20`
-- GRCh38
-  - `--h38`
-- GRCh37 primary
-  - `--grch37primary`
-- hs37d5
-  - `--hs37d5`
+- `hg19`
+  - Default reference genome if no fasta file is specified by `--fasta`.
+- `hg19chr20`
+  - For testing purposes: chromosome 20 of the hg19 reference genome
+- `h38`
+  - Use if reads were aligned against GRCh38 reference genome to produce input bam file(s)
+- `grch37primary`
+  - Use if reads were aligned against GRCh37 primary reference genome to produce input bam file(s)
+- `hs37d5`
 
-OR a user can use an own reference genome version, by using the following parameters:
+  - Use if reads were aligned against hs37d5 reference genome to produce input bam file(s)
 
-### Fasta
+### `--genomes_base`
+
+Base directory location of genomes (default = "s3://deepvariant-data/genomes") for use on computing clusters
+
+OR you can use your own reference genome version, by using the following parameters:
 
 The following parameter are optional:
 
-- Path to fasta reference
-  - `--fasta`
-- Path to fasta index
-  - `--fai`
-- Path to gzipped fasta
-  - `--fastagz`
-- Path to index of gzipped fasta
-  - `--gzfai`
-- Path to bgzip index format (.gzi)
-  - `--gzi`
+### `--fasta`
 
-If the optional parameters are not passed, they will be automatically be produced for you and you will be able to find them in the "preprocessingOUTPUT" folder.
+- Path to fasta reference
+
+### `--fai`
+
+- Path to fasta index generated using `samtools faidx`
+
+### `--fastagz`
+
+- Path to gzipped fasta
+
+### `--gzfai`
+
+- Path to index of gzipped fasta generated using `samtools faidx`
+
+### `--gzi`
+
+- Path to bgzip index format (.gzi)
+
+If the `fai`, `fastagz`, `gzfai` and `gzi` parameters are not passed, they will be automatically be produced for you and you will be able to find them in the "preprocessingOUTPUT" folder.
 
 ### Exome Data
 
+### `--exome`
+
 - For exome bam files
-  - `--exome`
-- Path to bedfile, can be used for exome data
-  - `--bed`
 
 If you are running on exome data you need to prodive the `--exome` flag so that the right verison of the model will be used.
-Moreover, you can provide a bed file.
 
 ```bash
-nextflow run nf-core/deepvariant --exome --hg19 --bam_folder myBamFolder --bed myBedFile
+nextflow run nf-core/deepvariant --genome hg19 --bam_folder myBamFolder --bed myBedFile --exome
 ```
-
-### Advanced Parameters
-
-#### CPUs
-
-The **make_example** process can be internally parallelized and it can be defined how many cpus should be assigned to this process.
-By default all the cpus of the machine are used.
-
-- Number of cores used by machine for makeExamples (default = all)
-  - `--j`
-
-```
---j 2          OPTIONAL (default: all)
-```
-
-#### Model
-
-The trained model which is used by the **call_variants** process can be changed.
-The default one is the 0.6.0 Version for the whole genome. So if that is what you want to use too, nothing needs to be changed.
-If you want to access the version 0.6.0 for the whole exome model, you need to use the --exome flag.
-
-```
-nextflow run nf-core/deepvariant --exome --hg19 --bam_folder myBamFolder --bed myBedFile
-```
-
-In case you want to use another version of the model you can change it by:
-
-```
---modelFolder "s3://deepvariant-test/models"
---modelName   "model.ckpt"
-```
-
-The modelName parameter describes the name of the model that should be used among the ones found in the folder defined by the parameter modelFolder. The model folder must contain 3 files, the list of which looks like this:
-
-```
-model.ckpt.data-00000-of-00001
-model.ckpt.index
-model.ckpt.meta
-```
-
-- Folder containing own DeepVariant trained data model
-  - `--modelFolder`
-- Name of own DeepVariant trained data model
-  - `--modelName`
-
-#### Read group
-
-- Bam file read group line id incase its needed (default = 4)
-  - `--rgid`
-- Bam file read group line library incase its needed (default = 'lib1')
-  - `--rglb`
-- Bam file read group line platform incase its needed (default = 'illumina')
-  - `--rgpl`
-- Bam file read group line platform unit incase its needed (default = 'unit1')
-  - `--rgpu`
-- Bam file read group line sample incase its needed (default = 20)
-  - `--rgsm`
 
 ## Job Resources
 

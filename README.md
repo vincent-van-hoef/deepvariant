@@ -31,20 +31,21 @@ https://research.googleblog.com/2017/12/deepvariant-highly-accurate-genomes.html
 
 ## Quick Start
 
-**Warning DeepVariant can be very computationally intensive to run**
+**Warning DeepVariant can be very computationally intensive to run.**
 A typical run on **whole genome data** looks like this:
 
 ```bash
-nextflow run nf-core/deepvariant --hg19 --bam_folder testdata
+nextflow run nf-core/deepvariant --genome hg19 --bam_folder testdata
+nextflow run nf-core/deepvariant --genome hg19 --bam testdata/test.bam --bed testdata/test.bed
 ```
 
-In this case variants are called on the two bam files contained in the lifebit-test-data/bam s3 bucket. The hg19 version of the reference genome is used.
-Two vcf files are produced and can be found in the folder "results"
+In this case variants are called on the bam files contained in the testdata directory. The hg19 version of the reference genome is used.
+One vcf files is produced and can be found in the folder "results"
 
 A typical run on **whole exome data** looks like this:
 
 ```bash
-nextflow run nf-core/deepvariant --exome --hg19 --bam_folder myBamFolder --bed myBedFile
+nextflow run nf-core/deepvariant --exome --genome hg19 --bam_folder myBamFolder --bed myBedFile
 ```
 
 ## Documentation
