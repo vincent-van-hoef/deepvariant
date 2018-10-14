@@ -308,7 +308,7 @@ if(!gzi){
 }
 
 //channel to collect all necessary reference files
-fastaChannel = Channel.from(fastaCh).mix(faiCh, fastaGzCh, gzFaiCh, gziCh).collect()
+fastaChannel = Channel.from(fastaCh).mix(bedCh, faiCh, fastaGzCh, gzFaiCh, gziCh).collect()
 
 /********************************************************************
   process preprocessBAM
@@ -366,7 +366,6 @@ all_fa.cross(all_bam)
 
     input:
     set file(fasta), file(bam) from all_fa_bam
-    file(bed) from bedCh
 
     output:
     set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
@@ -380,7 +379,7 @@ all_fa.cross(all_bam)
     --sample ${bam[1]} \
     --ref ${fasta[1]}.gz \
     --reads ${bam[1]} \
-    --regions ${bed} \
+    --regions ${fasta[2]} \
     --logdir logs \
     --examples shardedExamples
     """
