@@ -19,12 +19,13 @@ def helpMessage() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow run nf-core/deepvariant --genome hg19 --bam_folder "s3://deepvariant-data/test-bam/" -profile standard,docker
+    nextflow run nf-core/deepvariant --genome hg19 --bam_folder "s3://deepvariant-data/test-bam/" --bed testdata/test.bed -profile standard,docker
 
     Mandatory arguments:
       --bam_folder                  Path to folder containing BAM files (reads must have been aligned to specified reference file, see below)
       OR
       --bam                         Path to BAM file (reads must have been aligned to specified reference file, see below)
+      --bed                         Path to bed file specifying regions to be analyzed
 
     References:                     If you wish to overwrite deafult reference of hg19.
       --genome                      Refernce genome: hg19 (default) | hg19chr20 (for testing) | h38 | grch37primary | hs37d5
@@ -41,10 +42,6 @@ def helpMessage() {
       -profile                      Configuration profile to use. Can use multiple (comma separated)
                                     Available: standard, conda, docker, singularity, awsbatch, test
       --exome                       For exome bam files
-      --bed                         Path to bedfile
-      --modelBase                   Base directory for location of model folder (default = "s3://deepvariant-data")
-      --modelFolder                 Folder containing own DeepVariant trained data model
-      --modelName                   Name of own DeepVariant trained data model
       --rgid                        Bam file read group line id incase its needed (default = 4)
       --rglb                        Bam file read group line library incase its needed (default = 'lib1')
       --rgpl                        Bam file read group line platform incase its needed (default = 'illumina')
@@ -98,6 +95,7 @@ if (params.genome){
   bed = params.genome ? params.genomes[ params.genome ].bed ?: false : false
 }
 
+//setup fasta channels for preprocessing fasta files
 (fastaCh, fastaCh1, fastaCh2, fastaCh3, fastaCh4) = Channel.fromPath(fasta).into(5)
 
 bedCh = Channel
@@ -184,7 +182,7 @@ if(params.fai) summary['Fasta Index']            = params.fai
 if(params.fastagz) summary['Fasta gzipped ']     = params.fastagz
 if(params.gzfai) summary['Fasta gzipped Index']  = params.gzfai
 if(params.gzi) summary['Fasta bgzip Index']      = params.gzi
-if(params.rgid != 4) summary['BAM Read Group ID']         = params.rgid
+if(params.rgid != 4) summary['BAM Read Group ID']                   = params.rgid
 if(params.rglb != 'lib1') summary['BAM Read Group Library']         = params.rglb
 if(params.rgpl != 'illumina') summary['BAM Read Group Platform']    = params.rgpl
 if(params.rgpu != 'unit1') summary['BAM Read Group Platform Unit']  = params.rgpu
@@ -255,8 +253,6 @@ if(!fai) {
       samtools faidx $fasta
       """
   }
-} else {
-  fa_fai = Channel.from()
 }
 
 if(!fastagz) {
@@ -311,18 +307,15 @@ if(!gzi){
   }
 }
 
+//channel to collect all necessary reference files
 fastaChannel = Channel.from(fastaCh).mix(faiCh, fastaGzCh, gzFaiCh, gziCh).collect()
 
 /********************************************************************
   process preprocessBAM
-  If the user gives the index files for the bam files as an input, they are used
-  If not they are produced in this process given only the fasta file.
-  Moreover this takes care of the read group line too.
+  Takes care of the read group line.
 ********************************************************************/
 
-
 process preprocessBAM{
-
 
   tag "${bam[0]}"
   publishDir "$baseDir/sampleDerivatives"
@@ -403,7 +396,6 @@ process call_variants{
 
   input:
   set file(fasta),file("${fasta}.fai"),file("${fasta}.gz"),file("${fasta}.gz.fai"), file("${fasta}.gz.gzi"),val(bam), file("shardedExamples") from examples
-  file 'dv2/models' from model
 
   output:
   set file(fasta),file("${fasta}.fai"),file("${fasta}.gz"),file("${fasta}.gz.fai"), file("${fasta}.gz.gzi"), val(bam), file('call_variants_output.tfrecord') into called_variants
