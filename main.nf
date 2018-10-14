@@ -83,7 +83,7 @@ if(params.fasta){
   fastagz = params.fai ? params.fastagz : false
   gzfai = params.fai ? params.gzfai : false
   gzi = params.fai ? params.gzi : false
-  bed = params.bed ? params.bed : false
+  bed = params.bed
 } else {
   params.genome = 'hg19'
 }
@@ -99,7 +99,6 @@ if (params.genome){
 }
 
 (fastaCh, fastaCh1, fastaCh2, fastaCh3, fastaCh4) = Channel.fromPath(fasta).into(5)
-//(fastaCh, fastaCh1, fastaCh2, fastaCh3, fastaCh4, bedCh) = Channel.fromPath(fasta).into(6)
 
 bedCh = Channel
     .fromPath(bed)
@@ -108,25 +107,25 @@ bedCh = Channel
 if(fai){
 faiCh = Channel
     .fromPath(fai)
-    .ifEmpty("Fastagz file not found: ${params.fastagz}")
+    .ifEmpty{exit 1, "Fai file not found: ${params.fai}"}
 }
 
 if(fastagz){
 fastaGzCh = Channel
     .fromPath(fastagz)
-    .ifEmpty("Fastagz file not found: ${params.fastagz}")
+    .ifEmpty{exit 1, "Fastagz file not found: ${params.fastagz}"}
 }
 
 if(gzfai){
 gzFaiCh = Channel
     .fromPath(gzfai)
-    .ifEmpty("gzfai file not found: ${params.gzfai}")
+    .ifEmpty{exit 1, "gzfai file not found: ${params.gzfai}"}
 }
 
 if(gzi){
 gziCh = Channel
     .fromPath(gzi)
-    .ifEmpty("gzi file not found: ${params.gzi}")
+    .ifEmpty{exit 1, "gzi file not found: ${params.gzi}"}
 }
 /*--------------------------------------------------
   Bam related input files
@@ -312,7 +311,7 @@ if(!gzi){
   }
 }
 
-fastaChannel = Channel.from(fastaCh).mix(faiCh, fastaGzCh, gzFaiCh, gziCh, bedCh).collect()
+fastaChannel = Channel.from(fastaCh).mix(faiCh, fastaGzCh, gzFaiCh, gziCh).collect()
 
 /********************************************************************
   process preprocessBAM
@@ -360,8 +359,6 @@ completeChannel.map { file -> tuple(1,file[0],file[1]) }
 all_fa.cross(all_bam)
       .set{all_fa_bam};
 
-
-
       /********************************************************************
         process makeExamples
         Getting bam files and converting them to images ( named examples )
@@ -376,6 +373,7 @@ all_fa.cross(all_bam)
 
     input:
     set file(fasta), file(bam) from all_fa_bam
+    file(bed) from bedCh
 
     output:
     set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
@@ -389,7 +387,7 @@ all_fa.cross(all_bam)
     --sample ${bam[1]} \
     --ref ${fasta[1]}.gz \
     --reads ${bam[1]} \
-    --regions ${fasta[6]} \
+    --regions ${bed} \
     --logdir logs \
     --examples shardedExamples
     """
@@ -399,10 +397,7 @@ all_fa.cross(all_bam)
   Doing the variant calling based on the ML trained model.
 ********************************************************************/
 
-
-
 process call_variants{
-
 
   tag "${bam}"
 
@@ -432,7 +427,6 @@ process call_variants{
 ********************************************************************/
 
 process postprocess_variants{
-
 
   tag "$bam"
 
