@@ -352,9 +352,6 @@ all_fa.cross(all_bam)
 /********************************************************************
   process make_examples
   Getting bam files and converting them to images ( named examples )
-
-Can be parallelized through the params.n_shards
-( if params.n_shards >= 1 parallelization happens automatically)
 ********************************************************************/
 
     process make_examples{
