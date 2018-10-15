@@ -27,8 +27,8 @@ def helpMessage() {
       --bam                         Path to BAM file (reads must have been aligned to specified reference file, see below)
       --bed                         Path to bed file specifying regions to be analyzed
 
-    References:                     If you wish to overwrite deafult reference of hg19.
-      --genome                      Refernce genome: hg19 (default) | hg19chr20 (for testing) | h38 | grch37primary | hs37d5
+    References:                     If you wish to overwrite default reference of hg19.
+      --genome                      Reference genome: hg19 (default) | hg19chr20 (for testing) | h38 | grch37primary | hs37d5
       --genomes_base                Base directory location of genomes (default = "s3://deepvariant-data/genomes")
       OR
       --fasta                       Path to fasta reference
@@ -132,13 +132,11 @@ if(params.bam_folder) {
   Channel
       .fromPath("${params.bam_folder}/${params.bam_file_prefix}*.bam")
       .ifEmpty { exit 1, "${params.bam_folder}/${params.bam_file_prefix}*.bam not found"}
-      .map{ file -> tuple(file.name, file) }
       .set{bamChannel}
 } else if(params.bam) {
   Channel
       .fromPath(params.bam)
       .ifEmpty { exit 1, "${params.bam} not found"}
-      .map{ file -> tuple(file.name, file) }
       .set{bamChannel}
 } else {
   exit 1, "please specify --bam OR --bam_folder"
@@ -317,27 +315,27 @@ fastaChannel = Channel.from(fastaCh).mix(bedCh, faiCh, fastaGzCh, gzFaiCh, gziCh
 
 process preprocessBAM{
 
-  tag "${bam[0]}"
+  tag "${bam}"
   publishDir "$baseDir/sampleDerivatives"
 
   input:
-  set val(prefix), file(bam) from bamChannel
+  file(bam) from bamChannel
 
   output:
-  set file("ready/${bam[0]}"), file("ready/${bam[0]}.bai") into completeChannel
+  set file("ready/${bam}"), file("ready/${bam}.bai") into completeChannel
 
   script:
   """
   mkdir ready
-  [[ `samtools view -H ${bam[0]} | grep '@RG' | wc -l`   > 0 ]] && { mv $bam ready;}|| { picard AddOrReplaceReadGroups \
-  I=${bam[0]} \
-  O=ready/${bam[0]} \
+  [[ `samtools view -H ${bam} | grep '@RG' | wc -l`   > 0 ]] && { mv $bam ready;}|| { picard AddOrReplaceReadGroups \
+  I=${bam} \
+  O=ready/${bam} \
   RGID=${params.rgid} \
   RGLB=${params.rglb} \
   RGPL=${params.rgpl} \
   RGPU=${params.rgpu} \
   RGSM=${params.rgsm};}
-  cd ready ;samtools index ${bam[0]};
+  cd ready ;samtools index ${bam};
   """
 }
 
