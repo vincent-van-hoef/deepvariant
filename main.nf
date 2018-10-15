@@ -96,7 +96,7 @@ if (params.genome){
 }
 
 //setup fasta channels for preprocessing fasta files
-(fastaCh, fastaCh1, fastaCh2, fastaCh3, fastaCh4) = Channel.fromPath(fasta).into(5)
+(fastaCh, fastaToIndexCh, fastaToGzCh, fastaToGzFaiCh, fastaToGziCh) = Channel.fromPath(fasta).into(5)
 
 bedCh = Channel
     .fromPath(bed)
@@ -229,7 +229,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 
 
 /********************************************************************
-  process preprocessFASTA
+  preprocess fasta files processes
   Collects all the files related to the reference genome, like
   .fai,.gz ...
   If the user gives them as an input, they are used
@@ -237,11 +237,11 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 ********************************************************************/
 
 if(!fai) {
-  process preprocessFAI {
+  process preprocess_fai {
       publishDir "$baseDir/sampleDerivatives"
 
       input:
-      file(fasta) from fastaCh1
+      file(fasta) from fastaToIndexCh
 
       output:
       file("${fasta}.fai") into faiCh
@@ -254,11 +254,11 @@ if(!fai) {
 }
 
 if(!fastagz) {
-  process preprocessFASTGZ {
+  process preprocess_fastagz {
       publishDir "$baseDir/sampleDerivatives"
 
       input:
-      file(fasta) from fastaCh2
+      file(fasta) from fastaToGzCh
 
       output:
       file("*.gz") into (tmpFastaGzCh, fastaGzCh)
@@ -271,11 +271,11 @@ if(!fastagz) {
 }
 
 if(!gzfai) {
-  process preprocessGZFAI {
+  process preprocess_gzfai {
     publishDir "$baseDir/sampleDerivatives"
 
     input:
-    file(fasta) from fastaCh3
+    file(fasta) from fastaToGzFaiCh
     file(fastagz) from tmpFastaGzCh
 
     output:
@@ -289,11 +289,11 @@ if(!gzfai) {
 }
 
 if(!gzi){
-  process preprocessGZI {
+  process preprocess_gzi {
     publishDir "$baseDir/sampleDerivatives"
 
     input:
-    file(fasta) from fastaCh4
+    file(fasta) from fastaToGziCh
 
     output:
     file("*.gz.gzi") into gziCh
@@ -309,11 +309,11 @@ if(!gzi){
 fastaChannel = Channel.from(fastaCh).mix(bedCh, faiCh, fastaGzCh, gzFaiCh, gziCh).collect()
 
 /********************************************************************
-  process preprocessBAM
+  process preprocess_bam
   Takes care of the read group line.
 ********************************************************************/
 
-process preprocessBAM{
+process preprocess_bam{
 
   tag "${bam}"
   publishDir "$baseDir/sampleDerivatives"
@@ -340,48 +340,47 @@ process preprocessBAM{
 }
 
 
-//make tupule of reference files using fasta file as identifier
-fastaChannel.map{file -> tuple (1,file[0],file[1],file[2],file[3],file[4], file[5])}
+fastaChannel.map{fasta, bed, fai, fastagz, gzfai, gzi -> tuple (1, fasta, bed, fai, fastagz, gzfai, gzi)}
             .set{all_fa};
 
-completeChannel.map { file -> tuple(1,file[0],file[1]) }
+completeChannel.map { bam, bai -> tuple(1, bam, bai) }
                .set{all_bam};
 
 all_fa.cross(all_bam)
       .set{all_fa_bam};
 
-      /********************************************************************
-        process makeExamples
-        Getting bam files and converting them to images ( named examples )
+/********************************************************************
+  process make_examples
+  Getting bam files and converting them to images ( named examples )
 
-	Can be parallelized through the params.n_shards
-	( if params.n_shards >= 1 parallelization happens automatically)
-      ********************************************************************/
+Can be parallelized through the params.n_shards
+( if params.n_shards >= 1 parallelization happens automatically)
+********************************************************************/
 
-  process makeExamples{
+    process make_examples{
 
-    tag "${bam[1]}"
+      tag "${bam[1]}"
 
-    input:
-    set file(fasta), file(bam) from all_fa_bam
+      input:
+      set file(fasta), file(bam) from all_fa_bam
 
-    output:
-    set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
+      output:
+      set file("${fasta[1]}"),file("${fasta[1]}.fai"),file("${fasta[1]}.gz"),file("${fasta[1]}.gz.fai"), file("${fasta[1]}.gz.gzi"),val("${bam[1]}"), file("shardedExamples") into examples
 
-    script:
-    """
-    mkdir logs
-    mkdir shardedExamples
-    dv_make_examples.py \
-    --cores ${task.cpus} \
-    --sample ${bam[1]} \
-    --ref ${fasta[1]}.gz \
-    --reads ${bam[1]} \
-    --regions ${fasta[2]} \
-    --logdir logs \
-    --examples shardedExamples
-    """
-  }
+      script:
+      """
+      mkdir logs
+      mkdir shardedExamples
+      dv_make_examples.py \
+      --cores ${task.cpus} \
+      --sample ${bam[1]} \
+      --ref ${fasta[1]}.gz \
+      --reads ${bam[1]} \
+      --regions ${fasta[2]} \
+      --logdir logs \
+      --examples shardedExamples
+      """
+    }
 /********************************************************************
   process call_variants
   Doing the variant calling based on the ML trained model.
@@ -411,7 +410,7 @@ process call_variants{
 
 
 /********************************************************************
-  process call_variants
+  process postprocess_variants
   Trasforming the variant calling output (tfrecord file) into a standard vcf file.
 ********************************************************************/
 
