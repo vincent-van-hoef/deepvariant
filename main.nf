@@ -349,8 +349,7 @@ process make_examples{
   tag "${bam}"
 
   input:
-  set file(fastagz), file(bed) from fastaGzBed
-  // set file(fasta), file(bed), file(fai), file(fastagz), file(gzfai), file(gzi) from fastaChannel
+  set file(fasta), file(bed), file(fai), file(fastagz), file(gzfai), file(gzi) from fastaChannel
   set file(bam), file(bai) from completeChannel
 
   output:
