@@ -306,7 +306,7 @@ if(!gzi){
 }
 
 //channel to collect all necessary reference files
-fastaChannel = Channel.from(fastaCh).mix(bedCh, faiCh, fastaGzCh, gzFaiCh, gziCh).collect()
+fastaChannel = Channel.from(fastaCh).merge(bedCh, faiCh, fastaGzCh, gzFaiCh, gziCh).collect()
 
 /********************************************************************
   process preprocess_bam
@@ -344,31 +344,32 @@ process preprocess_bam{
   Getting bam files and converting them to images ( named examples )
 ********************************************************************/
 
-    process make_examples{
+process make_examples{
 
-      tag "${bam}"
+  tag "${bam}"
 
-      input:
-      set file(fasta), file(bed), file(fai), file(fastagz), file(gzfai), file(gzi) from fastaChannel
-      set file(bam), file(bai) from completeChannel
+  input:
+  set file(fastagz), file(bed) from fastaGzBed
+  // set file(fasta), file(bed), file(fai), file(fastagz), file(gzfai), file(gzi) from fastaChannel
+  set file(bam), file(bai) from completeChannel
 
-      output:
-      set file(fasta),file(fai),file(fastagz),file(gzfai),file(gzi),val("${bam}"),file('shardedExamples') into examples
+  output:
+  set val("${bam}"),file('shardedExamples') into examples
 
-      script:
-      """
-      mkdir logs
-      mkdir shardedExamples
-      dv_make_examples.py \
-      --cores ${task.cpus} \
-      --sample ${bam} \
-      --ref ${fastagz} \
-      --reads ${bam} \
-      --regions ${bed} \
-      --logdir logs \
-      --examples shardedExamples
-      """
-    }
+  script:
+  """
+  mkdir logs
+  mkdir shardedExamples
+  dv_make_examples.py \
+  --cores ${task.cpus} \
+  --sample ${bam} \
+  --ref ${fastagz} \
+  --reads ${bam} \
+  --regions ${bed} \
+  --logdir logs \
+  --examples shardedExamples
+  """
+}
 /********************************************************************
   process call_variants
   Doing the variant calling based on the ML trained model.
@@ -379,10 +380,10 @@ process call_variants{
   tag "${bam}"
 
   input:
-  set file(fasta),file(fai),file(fastagz),file(gzfai),file(gzi),val(bam),file('shardedExamples') from examples
+  set val(bam),file('shardedExamples') from examples
 
   output:
-  set file(fasta),file(fai),file(fastagz),file(gzfai),file(gzi),val(bam),file('call_variants_output.tfrecord') into called_variants
+  set val(bam),file('call_variants_output.tfrecord') into called_variants
 
   script:
   """
@@ -409,7 +410,8 @@ process postprocess_variants{
   publishDir params.outdir, mode: 'copy'
 
   input:
-  set file(fasta),file(fai),file(fastagz),file(gzfai),file(gzi),val(bam),file('call_variants_output.tfrecord') from called_variants
+  set file(fasta), file(bed), file(fai), file(fastagz), file(gzfai), file(gzi) from fastaChannel
+  set val(bam),file('call_variants_output.tfrecord') from called_variants
 
   output:
    set val(bam),file("${bam}.vcf") into postout
