@@ -73,56 +73,41 @@ if (params.help){
 //set model for call variants either whole genome or exome
 model= params.exome ? 'wes' : 'wgs'
 
-//if user inputs fasta set their reference files otherwise use hg19 as default
-if(params.fasta){
-  fasta = params.fasta
-  fai = params.fai ? params.fai : false
-  fastagz = params.fai ? params.fastagz : false
-  gzfai = params.fai ? params.gzfai : false
-  gzi = params.fai ? params.gzi : false
-  bed = params.bed
-} else {
-  params.genome = 'hg19'
-}
+//set fasta files equal to genome option if used
+params.fasta = params.genome ? params.genomes[ params.genome ].fasta : false
+params.fai = params.genome ? params.genomes[ params.genome ].fai : false
+params.fastagz = params.genome ? params.genomes[ params.genome ].fastagz : false
+params.gzfai = params.genome ? params.genomes[ params.genome ].gzfai : false
+params.gzi = params.genome ? params.genomes[ params.genome ].gzi : false
 
-//set genome options
-if (params.genome){
-  fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
-  fai = params.genome ? params.genomes[ params.genome ].fai ?: false : false
-  fastagz = params.genome ? params.genomes[ params.genome ].fastagz ?: false : false
-  gzfai = params.genome ? params.genomes[ params.genome ].gzfai ?: false : false
-  gzi = params.genome ? params.genomes[ params.genome ].gzi ?: false : false
-  bed = params.genome ? params.genomes[ params.genome ].bed ?: false : false
-}
-
-//setup fasta channels for preprocessing fasta files
-(fastaCh, fastaToIndexCh, fastaToGzCh, fastaToGzFaiCh, fastaToGziCh) = Channel.fromPath(fasta).into(5)
+//setup fasta channels
+(fastaCh, fastaToIndexCh, fastaToGzCh, fastaToGzFaiCh, fastaToGziCh) = Channel.fromPath(params.fasta).into(5)
 
 bedCh = Channel
-    .fromPath(bed)
+    .fromPath(params.bed)
     .ifEmpty { exit 1, "please specify --bed option (--bed bedfile)"}
 
-if(fai){
+if(params.fai){
 faiCh = Channel
-    .fromPath(fai)
+    .fromPath(params.fai)
     .ifEmpty{exit 1, "Fai file not found: ${params.fai}"}
 }
 
-if(fastagz){
+if(params.fastagz){
 fastaGzCh = Channel
-    .fromPath(fastagz)
+    .fromPath(params.fastagz)
     .ifEmpty{exit 1, "Fastagz file not found: ${params.fastagz}"}
 }
 
-if(gzfai){
+if(params.gzfai){
 gzFaiCh = Channel
-    .fromPath(gzfai)
+    .fromPath(params.gzfai)
     .ifEmpty{exit 1, "gzfai file not found: ${params.gzfai}"}
 }
 
-if(gzi){
+if(params.gzi){
 gziCh = Channel
-    .fromPath(gzi)
+    .fromPath(params.gzi)
     .ifEmpty{exit 1, "gzi file not found: ${params.gzi}"}
 }
 /*--------------------------------------------------
@@ -236,7 +221,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
   If not they are produced in this process given only the fasta file.
 ********************************************************************/
 
-if(!fai) {
+if(!params.fai) {
   process preprocess_fai {
       publishDir "$baseDir/sampleDerivatives"
 
@@ -253,7 +238,7 @@ if(!fai) {
   }
 }
 
-if(!fastagz) {
+if(!params.fastagz) {
   process preprocess_fastagz {
       publishDir "$baseDir/sampleDerivatives"
 
@@ -270,7 +255,7 @@ if(!fastagz) {
   }
 }
 
-if(!gzfai) {
+if(!params.gzfai) {
   process preprocess_gzfai {
     publishDir "$baseDir/sampleDerivatives"
 
@@ -288,7 +273,7 @@ if(!gzfai) {
   }
 }
 
-if(!gzi){
+if(!params.gzi){
   process preprocess_gzi {
     publishDir "$baseDir/sampleDerivatives"
 
