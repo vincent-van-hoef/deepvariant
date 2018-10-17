@@ -23,11 +23,9 @@ In practice, DeepVariant first builds images based on the BAM file, then it uses
 DeepVariant as a Nextflow pipeline provides several advantages to the users. It handles automatically, through **preprocessing steps**, the creation of some extra needed indexed and compressed files which are a necessary input for DeepVariant, and which should normally manually be produced by the users.
 Variant Calling can be performed at the same time on **multiple BAM files** and thanks to the internal parallelization of Nextflow no resources are wasted.
 Nextflow's support of Docker allows to produce the results in a computational reproducible and clean way by running every step inside of a **Docker container**.
-Moreover, you can easily run DeepVariant as a Nextflow pipeline in the **cloud** through the Lifebit platform and let it do the hard work of configuring, scheduling and deploying for you.
 
-For more detailed information about DeepVariant please refer to:
-https://github.com/google/deepvariant
-https://research.googleblog.com/2017/12/deepvariant-highly-accurate-genomes.html
+For more detailed information about Google's DeepVariant please refer to [google/deepvariant](https://github.com/google/deepvariant) or this [blog post](https://research.googleblog.com/2017/12/deepvariant-highly-accurate-genomes.html). <br />
+For more information about DeepVariant in Nextflow please refer to this [blog post](https://blog.lifebit.ai/post/deepvariant/?utm_campaign=documentation&utm_source=github&utm_medium=web)
 
 ## Quick Start
 
@@ -74,6 +72,6 @@ The worklow **accepts one reference genome and multiple BAM files as input**. Th
 
 ## Credits
 
-This pipeline was originally developed by [Lifebit](https://lifebit.ai/?utm_campaign=documentation&utm_source=github&utm_medium=web) to ease and reduce cost for variant calling analyses. You can test the pipeline through Lifebit's Platform: [Deploit](https://deploit.lifebit.ai/app/home). This allows you to run Deepvariant over cloud in a matter of a couple of clicks: and for single users our service is completely free! Read more about DeepVariant in Nextflow in this [Blog post](https://blog.lifebit.ai/post/deepvariant/?utm_campaign=documentation&utm_source=github&utm_medium=web)
+This pipeline was originally developed at [Lifebit](https://lifebit.ai/?utm_campaign=documentation&utm_source=github&utm_medium=web), by @luisas, to ease and reduce cost for variant calling analyses
 
-Many thanks to nf-core and those who have helped out along the way too, including (but not limited to): @ewels, @apeltzer & @MaxUlysse
+Many thanks to nf-core and those who have helped out along the way too, including (but not limited to): @ewels, @MaxUlysse, @apeltzer, @sven1103 & @pditommaso
