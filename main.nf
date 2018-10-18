@@ -81,34 +81,37 @@ params.gzfai = params.genome ? params.genomes[ params.genome ].gzfai : false
 params.gzi = params.genome ? params.genomes[ params.genome ].gzi : false
 
 //setup fasta channels
-(fastaCh, fastaToIndexCh, fastaToGzCh, fastaToGzFaiCh, fastaToGziCh) = Channel.fromPath(params.fasta).into(5)
+(fastaToIndexCh, fastaToGzCh, fastaToGzFaiCh, fastaToGziCh) = Channel.fromPath(params.fasta).into(4)
 
-bedCh = Channel
+bedToExamples = Channel
     .fromPath(params.bed)
     .ifEmpty { exit 1, "please specify --bed option (--bed bedfile)"}
 
 if(params.fai){
-faiCh = Channel
+faiToExamples = Channel
     .fromPath(params.fai)
     .ifEmpty{exit 1, "Fai file not found: ${params.fai}"}
 }
 
 if(params.fastagz){
-fastaGzCh = Channel
+fastaGz = Channel
     .fromPath(params.fastagz)
     .ifEmpty{exit 1, "Fastagz file not found: ${params.fastagz}"}
+    .into {fastaGzToExamples; fastaGzToVariants }
 }
 
 if(params.gzfai){
-gzFaiCh = Channel
+gzFai = Channel
     .fromPath(params.gzfai)
     .ifEmpty{exit 1, "gzfai file not found: ${params.gzfai}"}
+    .into{gzFaiToExamples; gzFaiToVariants }
 }
 
 if(params.gzi){
-gziCh = Channel
+gzi = Channel
     .fromPath(params.gzi)
     .ifEmpty{exit 1, "gzi file not found: ${params.gzi}"}
+    .into {gziToExamples; gziToVariants}
 }
 /*--------------------------------------------------
   Bam related input files
@@ -229,7 +232,7 @@ if(!params.fai) {
       file(fasta) from fastaToIndexCh
 
       output:
-      file("${fasta}.fai") into faiCh
+      file("${fasta}.fai") into faiToExamples
 
       script:
       """
@@ -246,7 +249,7 @@ if(!params.fastagz) {
       file(fasta) from fastaToGzCh
 
       output:
-      file("*.gz") into (tmpFastaGzCh, fastaGzCh)
+      file("*.gz") into (tmpFastaGzCh, fastaGzToExamples, fastaGzToVariants)
 
       script:
       """
@@ -264,7 +267,7 @@ if(!params.gzfai) {
     file(fastagz) from tmpFastaGzCh
 
     output:
-    file("*.gz.fai") into gzFaiCh
+    file("*.gz.fai") into (gzFaiToExamples, gzFaiToVariants)
 
     script:
     """
@@ -281,7 +284,7 @@ if(!params.gzi){
     file(fasta) from fastaToGziCh
 
     output:
-    file("*.gz.gzi") into gziCh
+    file("*.gz.gzi") into (gziToExamples, gziToVariants)
 
     script:
     """
@@ -289,9 +292,6 @@ if(!params.gzi){
     """
   }
 }
-
-//channel to collect all necessary reference files
-fastaChannel = Channel.from(fastaCh).merge(bedCh, faiCh, fastaGzCh, gzFaiCh, gziCh).collect()
 
 /********************************************************************
   process preprocess_bam
@@ -334,7 +334,11 @@ process make_examples{
   tag "${bam}"
 
   input:
-  set file(fasta), file(bed), file(fai), file(fastagz), file(gzfai), file(gzi) from fastaChannel
+  file fai from faiToExamples.collect()
+  file fastagz from fastaGzToExamples.collect()
+  file gzfai from gzFaiToExamples.collect()
+  file gzi from gziToExamples.collect()
+  file bed from bedToExamples.collect()
   set file(bam), file(bai) from completeChannel
 
   output:
@@ -394,7 +398,9 @@ process postprocess_variants{
   publishDir params.outdir, mode: 'copy'
 
   input:
-  set file(fasta), file(bed), file(fai), file(fastagz), file(gzfai), file(gzi) from fastaChannel
+  file fastagz from fastaGzToVariants.collect()
+  file gzfai from gzFaiToVariants.collect()
+  file gzi from gziToVariants.collect()
   set val(bam),file('call_variants_output.tfrecord') from called_variants
 
   output:
