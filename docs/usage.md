@@ -67,7 +67,7 @@ NXF_OPTS='-Xms1g -Xmx4g'
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/deepvariant --genome hg19 --bam testdata/test.bam --bed testdata/test.bed
+nextflow run nf-core/deepvariant --genome hg19 --bam testdata/test.bam --bed testdata/test.bed -profile standard,docker
 ```
 
 Note that the pipeline will create the following files in your working directory:
@@ -138,8 +138,10 @@ Use this parameter to choose a configuration profile. Profiles can give configur
 - `test`
   - A profile with a complete configuration for automated testing
   - Includes links to test data so needs no other parameters
+- `test_s3`
+  - A profile for testing the pipeline with files on an s3 bucket
+  - Other than the `docker` profile no further inputs are required
 - `none`
-
   - No configuration at all. Useful if you want to build your own config from scratch and want to avoid loading in the default `base` config profile (not recommended).
 
 ### `--bam`
@@ -182,15 +184,11 @@ The pipelines can acccept the refernece genome that was used to create the BAM f
 
 ### `--genome`
 
-By default the hg19 version of the reference genome is used. If you want to use it, you do not have to pass anything.
-
-If you do not want to use the deafult version, here is how it works:
-
-Standard version of the genome are prepared with all their compressed and indexed file in a lifebit s3 bucket.
+Standard versions of the genome are prepared with all their compressed and indexed file in a lifebit s3 bucket.
 They can be used with the following values for the `--genome` tag:
 
 - `hg19`
-  - Default reference genome if no fasta file is specified by `--fasta`.
+  - Use if reads were aligned against hg19 reference genome to produce input bam file(s)
 - `hg19chr20`
   - For testing purposes: chromosome 20 of the hg19 reference genome
 - `h38`
@@ -198,7 +196,6 @@ They can be used with the following values for the `--genome` tag:
 - `grch37primary`
   - Use if reads were aligned against GRCh37 primary reference genome to produce input bam file(s)
 - `hs37d5`
-
   - Use if reads were aligned against hs37d5 reference genome to produce input bam file(s)
 
 ### `--genomes_base`

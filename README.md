@@ -30,10 +30,17 @@ For more information about DeepVariant in Nextflow please refer to this [blog po
 ## Quick Start
 
 **Warning DeepVariant can be very computationally intensive to run.**
+
+To **test** the pipeline you can run:
+
+```bash
+nextflow run nf-core/deepvariant -profile test,docker
+```
+
 A typical run on **whole genome data** looks like this:
 
 ```bash
-nextflow run nf-core/deepvariant --genome hg19 --bam testdata/test.bam --bed testdata/test.bed
+nextflow run nf-core/deepvariant --genome hg19 --bam yourBamFile --bed yourBedFile -profile standard,docker
 ```
 
 In this case variants are called on the bam files contained in the testdata directory. The hg19 version of the reference genome is used.
@@ -42,7 +49,7 @@ One vcf files is produced and can be found in the folder "results"
 A typical run on **whole exome data** looks like this:
 
 ```bash
-nextflow run nf-core/deepvariant --exome --genome hg19 --bam_folder myBamFolder --bed myBedFile
+nextflow run nf-core/deepvariant --exome --genome hg19 --bam_folder myBamFolder --bed myBedFile -profile standard,docker
 ```
 
 ## Documentation

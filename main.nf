@@ -28,7 +28,7 @@ def helpMessage() {
       --bed                         Path to bed file specifying regions to be analyzed
 
     References:                     If you wish to overwrite default reference of hg19.
-      --genome                      Reference genome: hg19 (default) | hg19chr20 (for testing) | h38 | grch37primary | hs37d5
+      --genome                      Reference genome: hg19 | hg19chr20 (for testing) | h38 | grch37primary | hs37d5
       --genomes_base                Base directory location of genomes (default = "s3://deepvariant-data/genomes")
       OR
       --fasta                       Path to fasta reference
