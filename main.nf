@@ -13,7 +13,7 @@
 def helpMessage() {
     log.info"""
     =========================================
-    nf-core/deepvariant v${params.pipelineVersion}
+    nf-core/deepvariant v${workflow.manifest.version}
     =========================================
     Usage:
 
@@ -154,11 +154,11 @@ log.info """=======================================================
     |\\ | |__  __ /  ` /  \\ |__) |__         }  {
     | \\| |       \\__, \\__/ |  \\ |___     \\`-._,-`-,
                                           `._,._,\'
-nf-core/deepvariant v${params.pipelineVersion}"
+nf-core/deepvariant v${workflow.manifest.version}"
 ======================================================="""
 def summary = [:]
 summary['Pipeline Name']    = 'nf-core/deepvariant'
-summary['Pipeline Version'] = params.pipelineVersion
+summary['Pipeline Version'] = workflow.manifest.version
 if(params.bam_folder) summary['Bam folder'] = params.bam_folder
 if(params.bam) summary['Bam file']          = params.bam
 summary['Bed file']                         = params.bed
@@ -446,7 +446,7 @@ workflow.onComplete {
     subject = "[nf-core/deepvariant] FAILED: $workflow.runName"
   }
   def email_fields = [:]
-  email_fields['version'] = params.pipelineVersion
+  email_fields['version'] = workflow.manifest.version
   email_fields['runName'] = custom_runName ?: workflow.runName
   email_fields['success'] = workflow.success
   email_fields['dateComplete'] = workflow.complete
