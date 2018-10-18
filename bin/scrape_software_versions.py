@@ -6,6 +6,7 @@ import re
 regexes = {
     'nf-core/deepvariant': ['v_nf_deepvariant.txt', r"(\S+)"],
     'Nextflow': ['v_nextflow.txt', r"(\S+)"],
+    'DeepVariant': ['v_deepvariant.txt', r"deepvariant-(\S+)-"],
     'Python': ['v_python.txt', r"Python (\S+)"],
     'Pip': ['v_pip.txt', r"pip (\S+)"],
     'Samtools': ['v_samtools.txt', r"samtools (\S+)"],
@@ -16,6 +17,7 @@ regexes = {
 results = OrderedDict()
 results['nf-core/deepvariant'] = '<span style="color:#999999;\">N/A</span>'
 results['Nextflow'] = '<span style="color:#999999;\">N/A</span>'
+results['DeepVariant'] = '<span style="color:#999999;\">N/A</span>'
 results['Python'] = '<span style="color:#999999;\">N/A</span>'
 results['Pip'] = '<span style="color:#999999;\">N/A</span>'
 results['Samtools'] = '<span style="color:#999999;\">N/A</span>'

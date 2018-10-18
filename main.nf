@@ -427,6 +427,7 @@ process get_software_versions {
     """
     echo $workflow.manifest.version &> v_nf_deepvariant.txt
     echo $workflow.nextflow.version &> v_nextflow.txt
+    ls /opt/conda/pkgs/ &> v_deepvariant.txt
     python --version &> v_python.txt
     pip --version &> v_pip.txt
     samtools --version &> v_samtools.txt
