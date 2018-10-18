@@ -332,6 +332,8 @@ process preprocess_bam{
 process make_examples{
 
   tag "${bam}"
+  publishDir "${params.outdir}/make_examples", mode: 'copy',
+  saveAs: {filename -> "logs/log"}
 
   input:
   file fai from faiToExamples.collect()
@@ -342,12 +344,12 @@ process make_examples{
   set file(bam), file(bai) from completeChannel
 
   output:
-  set val("${bam}"),file('shardedExamples') into examples
+  set file("${bam}"),file('*_shardedExamples') into examples
 
   script:
   """
   mkdir logs
-  mkdir shardedExamples
+  mkdir ${bam.baseName}_shardedExamples
   dv_make_examples.py \
   --cores ${task.cpus} \
   --sample ${bam} \
@@ -355,7 +357,7 @@ process make_examples{
   --reads ${bam} \
   --regions ${bed} \
   --logdir logs \
-  --examples shardedExamples
+  --examples ${bam.baseName}_shardedExamples
   """
 }
 /********************************************************************
@@ -368,18 +370,18 @@ process call_variants{
   tag "${bam}"
 
   input:
-  set val(bam),file('shardedExamples') from examples
+  set file(bam),file(shardedExamples) from examples
 
   output:
-  set val(bam),file('call_variants_output.tfrecord') into called_variants
+  set file(bam),file('*_call_variants_output.tfrecord') into called_variants
 
   script:
   """
   dv_call_variants.py \
     --cores ${task.cpus} \
     --sample ${bam} \
-    --outfile call_variants_output.tfrecord \
-    --examples shardedExamples \
+    --outfile ${bam.baseName}_call_variants_output.tfrecord \
+    --examples $shardedExamples \
     --model ${model}
   """
 }
@@ -401,10 +403,10 @@ process postprocess_variants{
   file fastagz from fastaGzToVariants.collect()
   file gzfai from gzFaiToVariants.collect()
   file gzi from gziToVariants.collect()
-  set val(bam),file('call_variants_output.tfrecord') from called_variants
+  set file(bam),file('call_variants_output.tfrecord') from called_variants
 
   output:
-   set val(bam),file("${bam}.vcf") into postout
+   set val("${bam}"),file("${bam}.vcf") into postout
 
   script:
   """
