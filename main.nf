@@ -226,6 +226,7 @@ ${summary.collect { k,v -> "            <dt>$k</dt><dd><samp>${v ?: '<span style
 
 if(!params.fai) {
   process preprocess_fai {
+      tag "${fasta}.fai"
       publishDir "$baseDir/sampleDerivatives"
 
       input:
@@ -243,6 +244,7 @@ if(!params.fai) {
 
 if(!params.fastagz) {
   process preprocess_fastagz {
+      tag "${fasta}.gz"
       publishDir "$baseDir/sampleDerivatives"
 
       input:
@@ -260,6 +262,7 @@ if(!params.fastagz) {
 
 if(!params.gzfai) {
   process preprocess_gzfai {
+    tag "${fasta}.gz.fai"
     publishDir "$baseDir/sampleDerivatives"
 
     input:
@@ -278,6 +281,7 @@ if(!params.gzfai) {
 
 if(!params.gzi){
   process preprocess_gzi {
+    tag "${fasta}.gz.gzi"
     publishDir "$baseDir/sampleDerivatives"
 
     input:
