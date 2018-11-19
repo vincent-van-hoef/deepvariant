@@ -4,10 +4,10 @@ Bootstrap:docker
 %labels
     MAINTAINER Phil Palmer <phil@lifebit.ai>
     DESCRIPTION Singularity image containing all requirements for the nf-core/deepvariant pipeline
-    VERSION 1.0dev
+    VERSION 1.0
 
 %environment
-    PATH=/opt/conda/envs/nf-core-deepvariant-1.0dev/bin:$PATH
+    PATH=/opt/conda/envs/nf-core-deepvariant-1.0/bin:$PATH
     export PATH
 
 %files
