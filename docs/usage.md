@@ -51,6 +51,7 @@
   - [`--plaintext_emails`](#--plaintext_emails)
   - [`--sampleLevel`](#--sampleLevel)
   - [`--multiqc_config`](#--multiqc_config)
+- [Memory](#memory)
 
 ## General Nextflow info
 
@@ -323,3 +324,6 @@ Set to receive plain-text e-mails instead of HTML formatted.
 
 ### `--multiqc_config`
 Specify a path to a custom MultiQC configuration file.
+
+## Memory
+DeepVariant is quite memory intensive. The most memory intensive process is `make_examples`. The memory requirement should be approximately 10-15x the size of your BAM file. For example, for a 5GB BAM file the memory should be set to 50GB. Fortunately this is set automaticaally for you in `base.config` for all of the man deepvariant processes, so you don't need change aything more and can run the pipeline as normal.
