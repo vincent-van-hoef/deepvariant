@@ -1,5 +1,5 @@
 # nf-core/deepvariant
-**UNDER DEVELOPMENT: Deep Variant as a Nextflow pipeline**
+**Google's DeepVariant variant caller as a Nextflow pipeline**
 
 [![Build Status](https://travis-ci.org/nf-core/deepvariant.svg?branch=master)](https://travis-ci.org/nf-core/deepvariant)
 [![Nextflow](https://img.shields.io/badge/nextflow-%E2%89%A50.32.0-brightgreen.svg)](https://www.nextflow.io/)
