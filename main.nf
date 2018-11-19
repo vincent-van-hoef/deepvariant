@@ -334,7 +334,7 @@ process preprocess_bam{
 ********************************************************************/
 
 process make_examples{
-  
+
   tag "${bam}"
   publishDir "${params.outdir}/make_examples", mode: 'copy',
   saveAs: {filename -> "logs/log"}
