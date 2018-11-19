@@ -1,6 +1,6 @@
 # nf-core/deepvariant: Changelog
 
-## v1.0dev - <10/10/18>
+## v1.0 - 2018-11-19
 
 This release marks the point where the pipeline was moved from lifebit-ai/DeepVariant over to the new nf-core community, at nf-core/DeepVariant. The [nf-core](http://nf-co.re/) template was used to help ensure that the pipeline meets the standards of nf-core.
 
