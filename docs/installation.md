@@ -82,7 +82,7 @@ The process is very similar: running the pipeline with the option `-profile stan
 If running offline with Singularity, you'll need to download and transfer the Singularity image first:
 
 ```bash
-singularity pull --name nf-core-deepvariant.simg shub://nf-core/deepvariant
+singularity pull --name nf-core-deepvariant.simg docker://nfcore/deepvariant:latest
 ```
 
 Once transferred, use `-with-singularity` and specify the path to the image file:
