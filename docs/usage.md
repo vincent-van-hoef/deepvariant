@@ -179,13 +179,15 @@ All the input files can be used in s3 buckets too and the s3://path/to/files/in/
 
 - Path to bedfile, specifying region to be analysed must also be supplied
 
-### Reference Genomes
+## Reference Genomes
 
-The pipelines can acccept the refernece genome that was used to create the BAM file(s) in one of two ways. Either the reference genome can be specified eg `--genome hg19` (default) or by supplying a relevant fasta file (and optionally the indexes).
+The pipelines can accept the reference genome that was used to create the BAM file(s) in one of two ways.
+Either the reference genome can be specified eg `--genome hg19` (default)
+or by supplying a relevant fasta file (and optionally the indexes).
 
 ### `--genome`
 
-Standard versions of the genome are prepared with all their compressed and indexed file in a lifebit s3 bucket.
+Standard versions of the genome are prepared with all their compressed and indexed file in an AWS s3 bucket.
 They can be used with the following values for the `--genome` tag:
 
 - `hg19`
@@ -199,13 +201,26 @@ They can be used with the following values for the `--genome` tag:
 - `hs37d5`
   - Use if reads were aligned against hs37d5 reference genome to produce input bam file(s)
 
+For example, using `--genome h38` will instruct the pipeline to automatically download the required reference
+files from the s3 bucket and align using these.
+
 ### `--genomes_base`
 
-Base directory location of genomes (default = "s3://deepvariant-data/genomes") for use on computing clusters
+By default, the above references are downloaded from the deepvariant AWS s3 bucket (`s3://deepvariant-data/genomes`).
+If you want to run offline, or avoid repeatedly downloading the same references, you can fetch these manually and
+then specify their location on your system. Setting `--genomes_base` to the base location of these files allows you
+to continue using the `--genome` flag. For example:
 
-OR you can use your own reference genome version, by using the following parameters:
+```bash
+# Download the reference files
+aws s3 sync s3://deepvariant-data/genomes /path/to/deepvariant/genomes/
 
-The following parameter are optional:
+# run the pipeline
+nextflow run nf-core/deepvariant --genomes_base /path/to/deepvariant/genomes/ --genome h38
+```
+
+Alternatively, you can use your own reference genome version, by using the following parameters.
+The pipeline will then build the required indexes:
 
 ### `--fasta`
 
