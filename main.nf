@@ -513,5 +513,5 @@ workflow.onComplete {
   def output_tf = new File( output_d, "pipeline_report.txt" )
   output_tf.withWriter { w -> w << email_txt }
 
-  log.info "[nf-core/deepvariant] Pipeline Complete! You can find your results in $baseDir/${params.outdir}"
+  log.info "[nf-core/deepvariant] Pipeline Complete! You can find your results in ${params.outdir}"
 }
