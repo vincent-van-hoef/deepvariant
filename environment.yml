@@ -1,4 +1,4 @@
-name: nf-core-deepvariant-1.0
+name: nf-core-deepvariant-1.1
 channels:
   - bioconda
   - conda-forge
@@ -6,7 +6,7 @@ channels:
 dependencies:
   - python=2.7.15
   - pip=10.0.1
-  - deepvariant=0.7.0
+  - deepvariant=0.7.2
   - picard=2.18.7
   - samtools=1.9
   - htslib=1.9
