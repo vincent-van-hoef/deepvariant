@@ -1,5 +1,5 @@
 FROM nfcore/base
-LABEL authors="phil@lifebit.ai" \
+LABEL authors="vincent van hoef" \
       description="Docker image containing all requirements for nf-core/deepvariant pipeline"
 
 COPY environment.yml /
