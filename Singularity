@@ -1,4 +1,4 @@
-From:nfcore/base:latest
+From:nfcore/base
 Bootstrap:docker
 
 %labels
