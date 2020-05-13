@@ -439,7 +439,7 @@ process get_software_versions {
     samtools --version &> v_samtools.txt
     lbzip2 --version &> v_lbzip2.txt
     bzip2 --version &> v_bzip2.txt
-    scrape_software_versions.py &> software_versions_mqc.yaml
+    python2 scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
 
