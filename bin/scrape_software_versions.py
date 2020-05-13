@@ -28,7 +28,7 @@ results['Bzip2'] = '<span style="color:#999999;\">N/A</span>'
 # Search each file using its regex
 for k, v in regexes.items():
     with open(v[0]) as x:
-        versions = x.read()
+        versions = x.read().decode('utf-8')
         match = re.search(v[1], versions)
         if match:
             results[k] = "v{}".format(match.group(1))
