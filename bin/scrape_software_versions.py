@@ -5,15 +5,15 @@ import re
 import io
 
 regexes = {
-    'nf-core/deepvariant': ['v_nf_deepvariant.txt', r"(\S+)"],
-    'Nextflow': ['v_nextflow.txt', r"(\S+)"],
-    'DeepVariant': ['v_deepvariant.txt', r"deepvariant-(\S+)-"],
-    'Python': ['v_python.txt', r"Python (\S+)"],
-    'Pip': ['v_pip.txt', r"pip (\S+)"],
-    'Samtools': ['v_samtools.txt', r"samtools (\S+)"],
-    'Htslib': ['v_samtools.txt', r"Using htslib (\S+)"],
-    'Lbzip2': ['v_lbzip2.txt', r"lbzip2 version (\S+)"],
-    'Bzip2': ['v_bzip2.txt', r"bzip2, Version (\S+)"],
+    'nf-core/deepvariant': ['v_nf_deepvariant.txt', rb"(\S+)"],
+    'Nextflow': ['v_nextflow.txt', rb"(\S+)"],
+    'DeepVariant': ['v_deepvariant.txt', rb"deepvariant-(\S+)-"],
+    'Python': ['v_python.txt', rb"Python (\S+)"],
+    'Pip': ['v_pip.txt', rb"pip (\S+)"],
+    'Samtools': ['v_samtools.txt', rb"samtools (\S+)"],
+    'Htslib': ['v_samtools.txt', rb"Using htslib (\S+)"],
+    'Lbzip2': ['v_lbzip2.txt', rb"lbzip2 version (\S+)"],
+    'Bzip2': ['v_bzip2.txt', rb"bzip2, Version (\S+)"],
 }
 results = OrderedDict()
 results['nf-core/deepvariant'] = '<span style="color:#999999;\">N/A</span>'
