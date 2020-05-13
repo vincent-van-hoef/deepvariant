@@ -423,7 +423,7 @@ process postprocess_variants{
 
 /*
  * Parse software version numbers
- 
+ */
 process get_software_versions {
 
     output:
@@ -442,7 +442,7 @@ process get_software_versions {
     scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
-*/
+
 
 workflow.onComplete {
   // Set up the e-mail variables
